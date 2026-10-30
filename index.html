@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pixel-office</title>
+    <title>PAI's Office</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -45,14 +45,54 @@
         color: var(--muted);
         font-size: 13px;
       }
+      #welcome-overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(180deg, rgba(7, 15, 22, 0.22), rgba(10, 18, 28, 0.46));
+        pointer-events: none;
+        animation: fadeOut 5s ease forwards;
+      }
+      @keyframes fadeOut {
+        0% { opacity: 1; }
+        65% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      .welcome-box {
+        padding: 18px 26px;
+        border: 1px solid rgba(127, 224, 181, 0.5);
+        border-radius: 14px;
+        background: rgba(12, 20, 28, 0.45);
+        box-shadow: 0 18px 40px rgba(0,0,0,.28);
+        text-align: center;
+      }
+      .welcome-box h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 2.8vw, 3.2rem);
+        letter-spacing: 0.04em;
+        font-weight: 800;
+      }
+      .welcome-box p {
+        margin: 0;
+        font-size: clamp(0.9rem, 1.4vw, 1.2rem);
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
     <div class="shell">
-      <div class="stage" aria-label="Office scene" id="office-stage"></div>
+      <div class="stage" aria-label="Office scene" id="office-stage">
+        <div id="welcome-overlay">
+          <div class="welcome-box">
+            <h1>Welcome to PAI's Office</h1>
+            <p>Shared memory • autonomous agents • parallel workflows</p>
+          </div>
+        </div>
+      </div>
       <div class="hud">
-        <span>pixel-office demo</span>
-        <span>public-ready</span>
+        <span>PAI's Office demo</span>
+        <span>shared brain active</span>
       </div>
     </div>
 

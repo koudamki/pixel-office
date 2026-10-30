@@ -5,10 +5,18 @@
   const O = window.__office || {
     DESKS: ['desk-1', 'desk-2', 'desk-3', 'desk-4', 'desk-5', 'desk-6', 'desk-7', 'desk-8'],
     agents: new Map(),
+    memory: {
+      ledger: [],
+      remember: (entry) => {
+        O.memory.ledger.push({ ...entry, at: Date.now() });
+        if (O.memory.ledger.length > 200) O.memory.ledger.shift();
+      },
+      recall: (tag) => O.memory.ledger.filter((x) => x.tag === tag),
+    },
     feed: (...args) => console.debug('[office]', ...args),
     addAgent: (id, name) => {
       if (!O.agents.has(id)) {
-        O.agents.set(id, { id, name, x: 35, y: 60, state: 'work', bubble: '', bubbleUntil: 0, desk: 'desk-1', task: 'analysis' });
+        O.agents.set(id, { id, name, x: 35, y: 60, state: 'work', bubble: '', bubbleUntil: 0, desk: 'desk-1', task: 'analysis', mode: 'autonomous', memory: O.memory });
       }
     },
   };
@@ -17,14 +25,14 @@
   root.__office = O;
 
   const AGENT_TEMPLATES = {
-    Atlas: { desk: 'desk-1', role: 'Data Engineering Lead', task: 'designing the lakehouse', tool: 'dbt + SQL + Perplexity' },
-    Nova: { desk: 'desk-2', role: 'Pipeline Engineer', task: 'building ETL orchestration', tool: 'Airflow + Python + Perplexity' },
-    Sage: { desk: 'desk-3', role: 'Data Quality Analyst', task: 'validating freshness and checks', tool: 'Great Expectations + SQL' },
-    Pixel: { desk: 'desk-4', role: 'Analytics Engineer', task: 'curating semantic models', tool: 'dbt + Looker + Perplexity' },
-    Echo: { desk: 'desk-5', role: 'ML Ops Analyst', task: 'monitoring feature pipelines', tool: 'MLflow + Kafka + Perplexity' },
-    Bolt: { desk: 'desk-6', role: 'Security & Governance', task: 'checking access and lineage', tool: 'IAM + governance + Perplexity' },
-    Iris: { desk: 'desk-7', role: 'Research Analyst', task: 'compiling market and source intel', tool: 'Perplexity + notebooks' },
-    Juno: { desk: 'desk-8', role: 'Ops & Alignment', task: 'synchronizing delivery and QA', tool: 'task tracking + dashboards' },
+    Atlas: { desk: 'desk-1', role: 'Data Engineering Lead', task: 'designing the lakehouse', tool: 'dbt + SQL + Perplexity', mode: 'lead', memory: 'shared-brain' },
+    Nova: { desk: 'desk-2', role: 'Pipeline Engineer', task: 'building ETL orchestration', tool: 'Airflow + Python + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
+    Sage: { desk: 'desk-3', role: 'Data Quality Analyst', task: 'validating freshness and checks', tool: 'Great Expectations + SQL', mode: 'autonomous', memory: 'shared-brain' },
+    Pixel: { desk: 'desk-4', role: 'Analytics Engineer', task: 'curating semantic models', tool: 'dbt + Looker + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
+    Echo: { desk: 'desk-5', role: 'ML Ops Analyst', task: 'monitoring feature pipelines', tool: 'MLflow + Kafka + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
+    Bolt: { desk: 'desk-6', role: 'Security & Governance', task: 'checking access and lineage', tool: 'IAM + governance + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
+    Iris: { desk: 'desk-7', role: 'Research Analyst', task: 'compiling market and source intel', tool: 'Perplexity + notebooks', mode: 'autonomous', memory: 'shared-brain' },
+    Juno: { desk: 'desk-8', role: 'Ops & Alignment', task: 'synchronizing delivery and QA', tool: 'task tracking + dashboards', mode: 'sub-agent', memory: 'shared-brain' },
   };
 
   const CDN = 'https://cdn.jsdelivr.net/gh/W17ant/Claude-Office@1a9ba71251326b34c3caa90d49468e75420d0dd4/public/';
@@ -135,7 +143,6 @@
   }
 
   const SET = { Atlas: 'Me-1', Nova: 'dev-1', Sage: 'explore-1', Pixel: 'Frontend-dev-1', Echo: 'employee-1', Bolt: 'security-audit-1', Iris: 'employee-2', Juno: 'dev-2', Claude: 'Claude-1' };
-  const FACES = ['front-left', 'front-right', 'rear-left', 'rear-right'];
   const MIRROR = { 'front-left': 'front-right', 'front-right': 'front-left', 'rear-left': 'rear-right', 'rear-right': 'rear-left' };
   const chars = {};
 
@@ -176,7 +183,7 @@
   };
 
   function ensureAgent(id, name) {
-    const template = AGENT_TEMPLATES[name] || { desk: 'desk-1', role: 'Engineer', task: 'analysis', tool: 'local workflow' };
+    const template = AGENT_TEMPLATES[name] || { desk: 'desk-1', role: 'Engineer', task: 'analysis', tool: 'local workflow', mode: 'autonomous' };
     if (!O.agents.has(id)) {
       O.agents.set(id, {
         id,
@@ -190,6 +197,8 @@
         role: template.role,
         task: template.task,
         tool: template.tool,
+        mode: template.mode,
+        memory: O.memory,
       });
     }
 
@@ -198,6 +207,8 @@
     a.role ||= template.role || 'Engineer';
     a.task ||= template.task || 'analysis';
     a.tool ||= template.tool || 'local workflow';
+    a.mode ||= template.mode || 'autonomous';
+    a.memory ||= O.memory;
     if (!a.desk) a.desk = template.desk || 'desk-1';
     return a;
   }
@@ -206,12 +217,13 @@
     Object.keys(AGENT_TEMPLATES).forEach((name) => ensureAgent(`char-${name}`, name));
   } else {
     for (const [id, agent] of O.agents.entries()) {
-      const template = AGENT_TEMPLATES[agent.name] || { desk: agent.desk || 'desk-1', role: agent.role || 'Engineer', task: agent.task || 'analysis', tool: agent.tool || 'local workflow' };
+      const template = AGENT_TEMPLATES[agent.name] || { desk: agent.desk || 'desk-1', role: agent.role || 'Engineer', task: agent.task || 'analysis', tool: agent.tool || 'local workflow', mode: agent.mode || 'autonomous' };
       agent.desk ||= template.desk;
       agent.role ||= template.role;
       agent.task ||= template.task;
       agent.tool ||= template.tool;
-      if (!agent.desk && O.DESKS.length > 0) agent.desk = O.DESKS[0];
+      agent.mode ||= template.mode;
+      agent.memory ||= O.memory;
     }
   }
 
@@ -401,10 +413,12 @@
       say('Fresh coffee!', x, y - 8);
       pop('need-coffee', x, y - 12);
       O.feed?.(new Date(), 'Office', 'the coffee machine is brewing');
+      O.memory?.remember({ tag: 'coffee', actor: 'machine', detail: 'brew started' });
     } else if (id === 'cooler') {
       say('Stay hydrated', x, y - 8);
       pop('glass-water', x, y - 12);
       O.feed?.(new Date(), 'Office', 'someone is getting water');
+      O.memory?.remember({ tag: 'hydration', actor: 'agent', detail: 'water break' });
     } else if (id === 'bell') {
       for (const a of w) {
         a.bubble = 'ding!';
@@ -413,36 +427,46 @@
       say('DING!', x, y - 6);
       pop('star', x, y - 10);
       O.feed?.(new Date(), 'Office', 'the bell rang, everyone cheers');
+      O.memory?.remember({ tag: 'status', actor: 'bell', detail: 'team sync signal' });
     } else if (id === 'kanban') {
       say('Opening the board', x, y - 8);
+      O.memory?.remember({ tag: 'board', actor: 'agent', detail: 'kanban review started' });
     } else if (id === 'tv') {
       say(state.alert ? 'Server alert!' : 'All systems green', x, y - 8);
+      O.memory?.remember({ tag: 'monitor', actor: 'dashboard', detail: state.alert ? 'alert active' : 'system green' });
     } else if (id === 'poster') {
       say('Ship it!', x, y - 6);
       pop('rocket', x, y - 10);
+      O.memory?.remember({ tag: 'delivery', actor: 'poster', detail: 'launch enthusiasm' });
     } else if (id === 'ext') {
       say('Safety first', x, y - 6); pop('fire', x, y - 4);
     } else if (id === 'printer') {
       if (state.jam) {
         state.jam = false;
         say('Fixed!', x, y - 8);
+        O.memory?.remember({ tag: 'printer', actor: 'ops', detail: 'resolved jam' });
       } else {
         state.jam = Math.random() < 0.4;
         say(state.jam ? 'Paper jam!' : 'Page printed', x, y - 8);
+        O.memory?.remember({ tag: 'printer', actor: 'ops', detail: state.jam ? 'jam detected' : 'print success' });
       }
     } else if (id === 'filing') {
       state.fil = 3; say('Only paperwork', x, y - 8);
+      O.memory?.remember({ tag: 'docs', actor: 'filing', detail: 'records review' });
     } else if (id.startsWith('plant')) {
       say('Thanks, hydrated', x, y - 10);
       pop('watering-can', x, y - 14);
+      O.memory?.remember({ tag: 'plant', actor: 'agent', detail: 'plant care' });
     } else if (id === 'window') {
       say(dark() > 0.5 ? 'Good morning' : 'Lights out', x, y);
+      O.memory?.remember({ tag: 'lighting', actor: 'window', detail: dark() > 0.5 ? 'day mode' : 'night mode' });
     } else if (id === 'door') {
       const names = Object.keys(AGENT_TEMPLATES);
       const available = names.find((k) => ![...O.agents.values()].some((a) => a.name === k));
       if (available) {
         O.addAgent?.(`char-${available}`, available);
         say(`${available} walks in`, x, y - 4);
+        O.memory?.remember({ tag: 'arrival', actor: available, detail: 'joined office' });
       } else {
         say('All agents are here', x, y - 4);
       }
@@ -461,6 +485,7 @@
       a.bubbleUntil = Date.now() + 2500;
       pop('thumb-up', h.v.x, h.v.y - 17);
       say(a.name, h.v.x, h.v.y - 18);
+      O.memory?.remember({ tag: 'interaction', actor: a.name, detail: a.task });
     } else {
       respond(h.hot);
     }
@@ -488,6 +513,8 @@
       console.warn('Office art could not be loaded; demo will keep running without it.');
       return;
     }
+
+    O.memory?.remember({ tag: 'system', actor: 'PAI Office', detail: 'shared memory online' });
 
     let last = performance.now();
     const loop = (now) => {
