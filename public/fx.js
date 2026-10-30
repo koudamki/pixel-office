@@ -60,6 +60,14 @@
     Dahlia: ['supporting team needs', 'planning onboarding flow', 'reviewing policies', 'scheduling check-ins', 'keeping team aligned', 'organizing team wellbeing']
   };
 
+  const ACTIVITY_BINS = {
+    desk: ['deep focus work', 'reviewing task backlog', 'updating notes', 'checking current priorities', 'working through design details', 'refining the latest draft'],
+    call: ['taking a quick call', 'joining a customer check-in', 'answering a stakeholder question', 'handling a support request', 'joining an update call', 'on a short collaboration call'],
+    meeting: ['in a working session', 'in a team sync', 'in a project review', 'in a standup', 'in a planning huddle', 'in a cross-team meeting'],
+    break: ['stepping away for coffee', 'stretching and resetting', 'taking a short break', 'getting water', 'walking to the pantry', 'quietly recharging'],
+    idle: ['quietly triaging inbox', 'reviewing notes', 'organizing work items', 'checking the status board', 'waiting for feedback', 'drifting into a calm review']
+  };
+
   const O = window.__office || {
     DESKS: Object.keys(deskMap),
     agents: new Map(),
@@ -332,7 +340,7 @@
   }
 
   function getRotatingTask(agent) {
-    const list = TASK_LIBRARY[agent.name] || [
+    const warmList = TASK_LIBRARY[agent.name] || [
       'focusing on current priorities',
       'checking task updates',
       'working through blockers',
@@ -341,9 +349,19 @@
       'sharing status with stakeholders',
       'updating the work log'
     ];
-    const tick = Math.floor(Date.now() / 30000);
-    const index = (tick + (agent.seed || 0)) % list.length;
-    return list[index];
+
+    const cycle = Math.floor(Date.now() / 30000);
+    const bucketNames = ['desk', 'call', 'meeting', 'break', 'idle'];
+    const bucket = bucketNames[(cycle + (agent.seed || 0)) % bucketNames.length];
+    const bucketTasks = ACTIVITY_BINS[bucket] || ACTIVITY_BINS.desk;
+    const index = (cycle + (agent.seed || 0)) % bucketTasks.length;
+    const task = warmList[(cycle + (agent.seed || 0)) % warmList.length];
+
+    return {
+      bucket,
+      label: bucket === 'desk' || bucket === 'idle' ? task : bucketTasks[index],
+      task
+    };
   }
 
   function updateAgentRoutine(agent) {
@@ -357,25 +375,29 @@
       return;
     }
 
-    const nextTask = getRotatingTask(agent);
-    agent.task = nextTask;
-    const normalized = nextTask.toLowerCase();
+    const cycle = getRotatingTask(agent);
+    const label = cycle.label;
+    agent.task = label;
+    const normalized = label.toLowerCase();
 
-    if (normalized.includes('break') || normalized.includes('lunch') || normalized.includes('coffee') || normalized.includes('stretch') || normalized.includes('reset')) {
-      agent.bubble = nextTask;
+    if (normalized.includes('coffee') || normalized.includes('water') || normalized.includes('break') || normalized.includes('stretch') || normalized.includes('reset') || normalized.includes('pantry')) {
+      agent.bubble = label;
       agent.state = 'break';
-    } else if (normalized.includes('meeting') || normalized.includes('sync') || normalized.includes('call') || normalized.includes('stakeholder') || normalized.includes('review') || normalized.includes('brief')) {
-      agent.bubble = nextTask;
+    } else if (normalized.includes('call') || normalized.includes('sync') || normalized.includes('meeting') || normalized.includes('review') || normalized.includes('standup') || normalized.includes('check-in')) {
+      agent.bubble = label;
       agent.state = 'social';
-    } else if (normalized.includes('testing') || normalized.includes('regression') || normalized.includes('bug') || normalized.includes('quality') || normalized.includes('audit')) {
-      agent.bubble = nextTask;
-      agent.state = 'focus';
-    } else {
-      agent.bubble = nextTask;
+    } else if (normalized.includes('quiet') || normalized.includes('idle') || normalized.includes('notes') || normalized.includes('inbox') || normalized.includes('status') || normalized.includes('brief')) {
+      agent.bubble = label;
+      agent.state = 'idle';
+    } else if (normalized.includes('focus') || normalized.includes('work') || normalized.includes('writing') || normalized.includes('design') || normalized.includes('reviewing') || normalized.includes('updating') || normalized.includes('checking')) {
+      agent.bubble = label;
       agent.state = 'work';
+    } else {
+      agent.bubble = label;
+      agent.state = 'focus';
     }
 
-    agent.bubbleUntil = Date.now() + 1800;
+    agent.bubbleUntil = Date.now() + 2200;
   }
 
   function step(dt) {
