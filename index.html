@@ -12,19 +12,22 @@
         --text: #edf6ff;
         --muted: #9ab5c8;
         --accent: #7fe0b5;
+        --danger: #ff7a7a;
       }
       * { box-sizing: border-box; }
-      body {
+      html, body {
         margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
+        height: 100%;
         background: linear-gradient(180deg, #0c1620 0%, #1a2a36 100%);
         color: var(--text);
         font-family: Inter, system-ui, sans-serif;
       }
+      body {
+        display: grid;
+        place-items: center;
+      }
       .shell {
-        width: min(1100px, calc(100vw - 32px));
+        width: min(1180px, calc(100vw - 32px));
         background: var(--panel);
         border: 1px solid rgba(255,255,255,0.08);
         border-radius: 18px;
@@ -50,9 +53,10 @@
         inset: 0;
         display: grid;
         place-items: center;
-        background: linear-gradient(180deg, rgba(7, 15, 22, 0.22), rgba(10, 18, 28, 0.46));
+        background: linear-gradient(180deg, rgba(7, 15, 22, 0.2), rgba(10, 18, 28, 0.42));
         pointer-events: none;
         animation: fadeOut 5s ease forwards;
+        z-index: 10;
       }
       @keyframes fadeOut {
         0% { opacity: 1; }
@@ -61,7 +65,7 @@
       }
       .welcome-box {
         padding: 18px 26px;
-        border: 1px solid rgba(127, 224, 181, 0.5);
+        border: 1px solid rgba(127, 224, 181, 0.6);
         border-radius: 14px;
         background: rgba(12, 20, 28, 0.45);
         box-shadow: 0 18px 40px rgba(0,0,0,.28);
@@ -75,8 +79,78 @@
       }
       .welcome-box p {
         margin: 0;
-        font-size: clamp(0.9rem, 1.4vw, 1.2rem);
+        font-size: clamp(0.85rem, 1.3vw, 1.1rem);
         color: var(--muted);
+      }
+      .privacy-banner {
+        position: absolute;
+        left: 16px;
+        bottom: 16px;
+        z-index: 12;
+        font-size: 11px;
+        color: #dce7f0;
+        background: rgba(10, 16, 22, 0.48);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 8px 10px;
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+      }
+      .chat-panel {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        z-index: 12;
+        width: min(310px, calc(100% - 24px));
+        background: rgba(10, 16, 22, 0.76);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(0,0,0,.2);
+        overflow: hidden;
+      }
+      .chat-log {
+        max-height: 180px;
+        overflow: auto;
+        padding: 10px 12px 8px;
+        background: rgba(255,255,255,0.02);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .chat-entry {
+        padding: 4px 0;
+        color: #eaf6ff;
+      }
+      .chat-entry strong {
+        color: #7fe0b5;
+      }
+      .chat-form {
+        display: flex;
+        gap: 6px;
+        padding: 8px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+      }
+      .chat-form input {
+        flex: 1;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.04);
+        color: var(--text);
+        padding: 9px 10px;
+        font-size: 13px;
+      }
+      .chat-form button {
+        border: 1px solid rgba(127,224,181,0.45);
+        background: rgba(127,224,181,0.12);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0 12px;
+        cursor: pointer;
+      }
+      @media (max-width: 700px) {
+        .chat-panel {
+          width: 240px;
+          right: 8px;
+          bottom: 8px;
+        }
       }
     </style>
   </head>
@@ -87,6 +161,14 @@
           <div class="welcome-box">
             <h1>Welcome to PAI's Office</h1>
             <p>Shared memory • autonomous agents • parallel workflows</p>
+          </div>
+        </div>
+        <div class="privacy-banner">Local-only. No user data collection. No telemetry.</div>
+        <div class="chat-panel" aria-label="Agent chat">
+          <div class="chat-log" id="chat-log"></div>
+          <div class="chat-form">
+            <input id="agent-chat-input" type="text" placeholder="Type: Atlas, make coffee" aria-label="Agent command" />
+            <button id="send-chat">Send</button>
           </div>
         </div>
       </div>
