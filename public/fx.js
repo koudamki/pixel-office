@@ -3,6 +3,7 @@
   if (!stage) return;
 
   const AGENT_NAMES = ['Atlas', 'Nova', 'Sage', 'Pixel', 'Echo', 'Bolt', 'Iris', 'Juno', 'Milo', 'Astra', 'Hux', 'Lena', 'Orion', 'Vera', 'Theo', 'Dahlia'];
+
   const AGENT_TEMPLATES = {
     Atlas: { desk: 'desk-1', role: 'Data Engineering Lead', task: 'reviewing pipeline priorities', tool: 'dbt + SQL + Perplexity', mode: 'lead' },
     Nova: { desk: 'desk-2', role: 'Pipeline Engineer', task: 'optimizing ETL flow', tool: 'Airflow + Python + Perplexity', mode: 'autonomous' },
@@ -39,6 +40,25 @@
     'desk-14': { x: 80, y: 88 },
     'desk-15': { x: 88, y: 80 },
     'desk-16': { x: 90, y: 68 },
+  };
+
+  const START_LAYOUT = {
+    Atlas: { desk: 'desk-1', x: 20, y: 64, face: 'front-right' },
+    Nova: { desk: 'desk-2', x: 32, y: 64, face: 'front-right' },
+    Sage: { desk: 'desk-3', x: 46, y: 64, face: 'front-right' },
+    Pixel: { desk: 'desk-4', x: 58, y: 64, face: 'front-right' },
+    Echo: { desk: 'desk-5', x: 72, y: 64, face: 'front-left' },
+    Bolt: { desk: 'desk-6', x: 30, y: 80, face: 'front-right' },
+    Iris: { desk: 'desk-7', x: 52, y: 82, face: 'front-right' },
+    Juno: { desk: 'desk-8', x: 68, y: 82, face: 'front-right' },
+    Milo: { desk: 'desk-9', x: 18, y: 88, face: 'front-left' },
+    Astra: { desk: 'desk-10', x: 30, y: 90, face: 'front-right' },
+    Hux: { desk: 'desk-11', x: 42, y: 90, face: 'front-right' },
+    Lena: { desk: 'desk-12', x: 55, y: 90, face: 'front-right' },
+    Orion: { desk: 'desk-13', x: 68, y: 90, face: 'front-left' },
+    Vera: { desk: 'desk-14', x: 80, y: 88, face: 'front-left' },
+    Theo: { desk: 'desk-15', x: 88, y: 80, face: 'front-left' },
+    Dahlia: { desk: 'desk-16', x: 90, y: 68, face: 'front-left' },
   };
 
   const TASK_LIBRARY = {
@@ -327,6 +347,29 @@
       agent.mode ||= template.mode;
       agent.memory ||= O.memory;
       agent.seed ||= (AGENT_NAMES.indexOf(agent.name) + 1) * 7;
+    }
+  }
+
+  function applyLaunchLayout() {
+    for (const [id, agent] of O.agents.entries()) {
+      const target = START_LAYOUT[agent.name] || { desk: agent.desk || 'desk-1', x: 35, y: 60, face: 'front-right' };
+      const slot = parseInt(String(target.desk).replace(/\D/g, ''), 10) || 1;
+      const v = V.get(id) || { x: target.x, y: target.y, path: [], target: null, face: target.face || 'front-right', moving: false };
+      v.x = target.x;
+      v.y = target.y;
+      v.face = target.face || 'front-right';
+      v.moving = false;
+      v.target = 'spot' + slot;
+      v.path = [v.target];
+      V.set(id, v);
+
+      agent.desk = target.desk;
+      agent.x = target.x;
+      agent.y = target.y;
+      agent.state = 'work';
+      agent.bubble = agent.role;
+      agent.bubbleUntil = Date.now() + 2000;
+      agent.task = TASK_LIBRARY[agent.name]?.[0] || agent.task;
     }
   }
 
@@ -693,6 +736,7 @@
       return;
     }
 
+    applyLaunchLayout();
     O.memory.remember({ tag: 'system', actor: 'PAI Office', detail: 'shared memory online' });
 
     let last = performance.now();
