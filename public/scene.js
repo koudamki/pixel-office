@@ -1,536 +1,183 @@
-(() => {
-  const stage = document.querySelector('.stage') || document.getElementById('office-stage');
-  if (!stage) return;
-
-  const O = window.__office || {
-    DESKS: ['desk-1', 'desk-2', 'desk-3', 'desk-4', 'desk-5', 'desk-6', 'desk-7', 'desk-8'],
-    agents: new Map(),
-    memory: {
-      ledger: [],
-      remember: (entry) => {
-        O.memory.ledger.push({ ...entry, at: Date.now() });
-        if (O.memory.ledger.length > 200) O.memory.ledger.shift();
-      },
-      recall: (tag) => O.memory.ledger.filter((x) => x.tag === tag),
-    },
-    feed: (...args) => console.debug('[office]', ...args),
-    addAgent: (id, name) => {
-      if (!O.agents.has(id)) {
-        O.agents.set(id, { id, name, x: 35, y: 60, state: 'work', bubble: '', bubbleUntil: 0, desk: 'desk-1', task: 'analysis', mode: 'autonomous', memory: O.memory });
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAI's Office</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #09111b;
+        --panel: rgba(10, 18, 28, 0.75);
+        --text: #edf6ff;
+        --muted: #9ab5c8;
+        --accent: #7fe0b5;
+        --danger: #ff7a7a;
       }
-    },
-  };
-
-  const root = window;
-  root.__office = O;
-
-  const AGENT_TEMPLATES = {
-    Atlas: { desk: 'desk-1', role: 'Data Engineering Lead', task: 'designing the lakehouse', tool: 'dbt + SQL + Perplexity', mode: 'lead', memory: 'shared-brain' },
-    Nova: { desk: 'desk-2', role: 'Pipeline Engineer', task: 'building ETL orchestration', tool: 'Airflow + Python + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
-    Sage: { desk: 'desk-3', role: 'Data Quality Analyst', task: 'validating freshness and checks', tool: 'Great Expectations + SQL', mode: 'autonomous', memory: 'shared-brain' },
-    Pixel: { desk: 'desk-4', role: 'Analytics Engineer', task: 'curating semantic models', tool: 'dbt + Looker + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
-    Echo: { desk: 'desk-5', role: 'ML Ops Analyst', task: 'monitoring feature pipelines', tool: 'MLflow + Kafka + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
-    Bolt: { desk: 'desk-6', role: 'Security & Governance', task: 'checking access and lineage', tool: 'IAM + governance + Perplexity', mode: 'autonomous', memory: 'shared-brain' },
-    Iris: { desk: 'desk-7', role: 'Research Analyst', task: 'compiling market and source intel', tool: 'Perplexity + notebooks', mode: 'autonomous', memory: 'shared-brain' },
-    Juno: { desk: 'desk-8', role: 'Ops & Alignment', task: 'synchronizing delivery and QA', tool: 'task tracking + dashboards', mode: 'sub-agent', memory: 'shared-brain' },
-  };
-
-  const CDN = 'https://cdn.jsdelivr.net/gh/W17ant/Claude-Office@1a9ba71251326b34c3caa90d49468e75420d0dd4/public/';
-  const BASES = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) ? ['assets/', CDN] : [CDN, 'assets/'];
-  const S = 1.5, W = 1200, H = 900, PX = W / 100, PY = H / 100;
-
-  const loadImg = (p) => new Promise((res) => {
-    let tries = 0;
-    const im = new Image();
-    im.onload = () => res(im);
-    im.onerror = () => {
-      if (++tries < BASES.length) {
-        im.src = BASES[tries] + p;
-      } else {
-        res(null);
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: linear-gradient(180deg, #0c1620 0%, #1a2a36 100%);
+        color: var(--text);
+        font-family: Inter, system-ui, sans-serif;
       }
-    };
-    im.src = BASES[0] + p;
-  });
-
-  const SP = 'sprites/';
-  const ART = {
-    room: ['rooms/office-day.png'],
-    night: ['rooms/office-night.png'],
-    dlf: [SP + 'furniture/standing-desk-left-front.png', 84, 106],
-    dlr: [SP + 'furniture/standing-desk-left-rear.png', 84, 102],
-    drf: [SP + 'furniture/standing-desk-right-front.png', 84, 106],
-    drr: [SP + 'furniture/standing-desk-right-rear.png', 84, 102],
-    filC: [SP + 'furniture/filling-closed.png', 42, 56],
-    filO: [SP + 'furniture/filling-open.png', 46, 60],
-    cofOff: [SP + 'appliances/coffee-off.png', 40, 51],
-    cofOn: [SP + 'appliances/coffee-on.png', 40, 51],
-    snake: [SP + 'decoration/snake-plant.png', 40, 63],
-    monstera: [SP + 'decoration/monstera-plant.png', 50, 71],
-    money: [SP + 'decoration/money-tree.png', 42, 63],
-    prOk: [SP + 'decoration/printer-working.png', 55, 69],
-    prBad: [SP + 'decoration/printer-broken.png', 55, 69],
-    typing: [SP + 'effects/typing.png', 24, 24],
-    sleeping: [SP + 'effects/sleeping.png', 24, 24],
-    star: [SP + 'effects/star.png', 24, 24],
-    rocket: [SP + 'effects/rocket.png', 24, 24],
-    'thumb-up': [SP + 'effects/thumb-up.png', 24, 24],
-    'watering-can': [SP + 'effects/watering-can.png', 24, 24],
-    'glass-water': [SP + 'effects/glass-water.png', 24, 24],
-    'need-coffee': [SP + 'effects/need-coffee.png', 24, 24],
-    fire: [SP + 'effects/fire.png', 24, 24],
-    party: [SP + 'effects/party.png', 24, 24],
-    pizza: [SP + 'effects/pizza.png', 24, 24],
-  };
-
-  const img = {};
-  const FURN = [
-    ['dlr', 42.4, 50.4], ['dlf', 46.7, 53], ['drf', 39.9, 55.2], ['dlr', 31.4, 64.8],
-    ['dlf', 35.4, 67.5], ['drf', 27.9, 70], ['dlr', 59, 73.7], ['dlf', 62.6, 76],
-    ['drf', 55.4, 78.7], ['drr', 66.6, 71.1], ['filC', 45, 56.5, 'filing'], ['snake', 43.2, 37.9, 'plant2'],
-    ['monstera', 91.9, 64.7, 'plant1'], ['money', 32, 71.2, 'plant3'], ['money', 89.2, 65.7, 'plant4'],
-    ['monstera', 60.2, 80.4, 'plant5'], ['prOk', 85.4, 56.8, 'printer'], ['cofOff', 78.5, 50.2, 'coffee']
-  ];
-
-  const HOT = [
-    ['coffee', 'Coffee machine', 78.5, 46, 6, 9], ['filing', 'Filing cabinet', 45, 52, 6, 9],
-    ['printer', 'Printer', 85.4, 52, 7, 10], ['plant1', 'Plant', 91.9, 60, 6, 10], ['plant2', 'Plant', 43.2, 33, 5, 9],
-    ['plant3', 'Plant', 32, 66, 5, 9], ['plant4', 'Plant', 89.2, 61, 5, 9], ['plant5', 'Plant', 60.2, 75, 6, 10],
-    ['cooler', 'Water cooler', 53, 43, 6, 10], ['bell', 'Bell', 63, 37, 4, 8], ['kanban', 'Kanban board', 80, 40, 9, 13],
-    ['tv', 'Dashboard', 90, 42, 7, 10], ['poster', 'Ship It poster', 8, 45, 6, 14], ['ext', 'Fire extinguisher', 8, 60, 4, 9],
-    ['window', 'Windows: day and night', 24, 33, 26, 34], ['door', 'Door', 69, 35, 6, 16]
-  ];
-
-  const N = {
-    door: [67.5, 48.9, 'front-right'], door2: [64, 46.6], door3: [69.9, 50.8],
-    water1: [53.3, 46.6, 'rear-left'], water2: [56, 47.7, 'front-right'], filing: [47.8, 57.6, 'front-right'],
-    coffee1: [73.5, 56.7, 'rear-left'], coffee2: [76.2, 58.4, 'front-right'], printer: [81, 63, 'rear-left'],
-    spot1: [25.8, 71, 'rear-left', 85], spot2: [37.9, 68.2, 'rear-right', 85], spot3: [26.9, 59.2, 'front-left', 40],
-    spot4: [38.5, 55.2, 'rear-left', 58], spot5: [48.9, 52.9, 'rear-right', 70], spot6: [38.8, 43.6, 'front-left', 30],
-    spot7: [52.7, 78.8, 'rear-left', 95], spot8: [65.9, 75.8, 'rear-right', 95], spot9: [55.2, 66.8, 'front-left', 55],
-    spot10: [68.7, 66.2, 'front-right', 55]
-  };
-
-  const G = {};
-  const edges = 'door-door2 door-door3 door2-water1 door3-coffee1 door3-spot10 water1-water2 water1-spot5 spot6-spot4 spot6-water1 spot4-spot5 spot4-spot3 spot4-filing spot5-filing spot5-spot9 filing-spot9 spot3-spot1 spot1-spot2 spot2-spot4 spot2-spot7 spot9-spot7 spot9-spot10 spot10-spot8 spot10-coffee1 spot7-spot8 coffee1-coffee2 coffee2-printer'.split(' ');
-  for (const e of edges) {
-    const [a, b] = e.split('-');
-    (G[a] ||= []).push(b);
-    (G[b] ||= []).push(a);
-  }
-
-  const dist = (a, b) => Math.hypot((a[0] - b[0]) * 8, (a[1] - b[1]) * 6);
-  const nearest = (x, y) => Object.keys(N).reduce((m, k) => (dist([x, y], N[k]) < dist([x, y], N[m]) ? k : m));
-
-  function route(from, to) {
-    const d = { [from]: 0 }, prev = {}, todo = new Set(Object.keys(N));
-    while (todo.size) {
-      let u = null;
-      for (const k of todo) if (d[k] !== undefined && (u === null || d[k] < d[u])) u = k;
-      if (u === null || u === to) break;
-      todo.delete(u);
-      for (const v of G[u] || []) {
-        const nd = d[u] + dist(N[u], N[v]);
-        if (d[v] === undefined || nd < d[v]) {
-          d[v] = nd;
-          prev[v] = u;
+      body {
+        display: grid;
+        place-items: center;
+      }
+      .shell {
+        width: min(1180px, calc(100vw - 32px));
+        background: var(--panel);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        box-shadow: 0 22px 70px rgba(0,0,0,0.35);
+        overflow: hidden;
+      }
+      .stage {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #121b22;
+      }
+      .hud {
+        display: flex;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      #welcome-overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(180deg, rgba(7, 15, 22, 0.2), rgba(10, 18, 28, 0.42));
+        pointer-events: none;
+        animation: fadeOut 5s ease forwards;
+        z-index: 10;
+      }
+      @keyframes fadeOut {
+        0% { opacity: 1; }
+        65% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      .welcome-box {
+        padding: 18px 26px;
+        border: 1px solid rgba(127, 224, 181, 0.6);
+        border-radius: 14px;
+        background: rgba(12, 20, 28, 0.45);
+        box-shadow: 0 18px 40px rgba(0,0,0,.28);
+        text-align: center;
+      }
+      .welcome-box h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 2.8vw, 3.2rem);
+        letter-spacing: 0.04em;
+        font-weight: 800;
+      }
+      .welcome-box p {
+        margin: 0;
+        font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+        color: var(--muted);
+      }
+      .privacy-banner {
+        position: absolute;
+        left: 16px;
+        bottom: 16px;
+        z-index: 12;
+        font-size: 11px;
+        color: #dce7f0;
+        background: rgba(10, 16, 22, 0.48);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 8px 10px;
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+      }
+      .chat-panel {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        z-index: 12;
+        width: min(310px, calc(100% - 24px));
+        background: rgba(10, 16, 22, 0.76);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(0,0,0,.2);
+        overflow: hidden;
+      }
+      .chat-log {
+        max-height: 180px;
+        overflow: auto;
+        padding: 10px 12px 8px;
+        background: rgba(255,255,255,0.02);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .chat-entry {
+        padding: 4px 0;
+        color: #eaf6ff;
+      }
+      .chat-entry strong {
+        color: #7fe0b5;
+      }
+      .chat-form {
+        display: flex;
+        gap: 6px;
+        padding: 8px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+      }
+      .chat-form input {
+        flex: 1;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.04);
+        color: var(--text);
+        padding: 9px 10px;
+        font-size: 13px;
+      }
+      .chat-form button {
+        border: 1px solid rgba(127,224,181,0.45);
+        background: rgba(127,224,181,0.12);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0 12px;
+        cursor: pointer;
+      }
+      @media (max-width: 700px) {
+        .chat-panel {
+          width: 240px;
+          right: 8px;
+          bottom: 8px;
         }
       }
-    }
-    const p = [to];
-    while (prev[p[0]]) p.unshift(prev[p[0]]);
-    return p;
-  }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="stage" aria-label="Office scene" id="office-stage">
+        <div id="welcome-overlay">
+          <div class="welcome-box">
+            <h1>Welcome to PAI's Office</h1>
+            <p>Shared memory • autonomous agents • parallel workflows</p>
+          </div>
+        </div>
+        <div class="privacy-banner">Local-only. No user data collection. No telemetry.</div>
+        <div class="chat-panel" aria-label="Agent chat">
+          <div class="chat-log" id="chat-log"></div>
+          <div class="chat-form">
+            <input id="agent-chat-input" type="text" placeholder="Type: Atlas, make coffee" aria-label="Agent command" />
+            <button id="send-chat">Send</button>
+          </div>
+        </div>
+      </div>
+      <div class="hud">
+        <span>PAI's Office demo</span>
+        <span>shared brain active</span>
+      </div>
+    </div>
 
-  const SET = { Atlas: 'Me-1', Nova: 'dev-1', Sage: 'explore-1', Pixel: 'Frontend-dev-1', Echo: 'employee-1', Bolt: 'security-audit-1', Iris: 'employee-2', Juno: 'dev-2', Claude: 'Claude-1' };
-  const MIRROR = { 'front-left': 'front-right', 'front-right': 'front-left', 'rear-left': 'rear-right', 'rear-right': 'rear-left' };
-  const chars = {};
-
-  function sprite(set, face) {
-    const k = set + face;
-    if (!(k in chars)) {
-      chars[k] = null;
-      loadImg('sprites/characters/' + set + '-' + face + '.png').then((im) => { chars[k] = im || false; });
-    }
-    if (chars[k]) return [chars[k], false];
-    const m = set + MIRROR[face];
-    if (chars[m]) return [chars[m], true];
-    if (!(m in chars)) {
-      chars[m] = null;
-      loadImg('sprites/characters/' + set + '-' + MIRROR[face] + '.png').then((im) => { chars[m] = im || false; });
-    }
-    return [null, false];
-  }
-
-  const cv = document.createElement('canvas');
-  cv.id = 'scene';
-  cv.width = W;
-  cv.height = H;
-  cv.setAttribute('aria-label', 'Illustrated office scene');
-  stage.appendChild(cv);
-
-  const g = cv.getContext('2d');
-  const V = new Map();
-  const floats = [];
-  const pops = [];
-  const state = { cof: 0, fil: 0, jam: false, alert: false, hover: null, mx: 0, my: 0 };
-
-  const dark = () => {
-    const d = new Date();
-    const h = d.getHours() + d.getMinutes() / 60;
-    const day = h >= 6 && h <= 18 ? Math.sin(Math.PI * (h - 6) / 12) : 0;
-    return 1 - Math.min(1, day * 1.6);
-  };
-
-  function ensureAgent(id, name) {
-    const template = AGENT_TEMPLATES[name] || { desk: 'desk-1', role: 'Engineer', task: 'analysis', tool: 'local workflow', mode: 'autonomous' };
-    if (!O.agents.has(id)) {
-      O.agents.set(id, {
-        id,
-        name,
-        x: N.door[0],
-        y: N.door[1],
-        state: 'work',
-        bubble: '',
-        bubbleUntil: 0,
-        desk: template.desk,
-        role: template.role,
-        task: template.task,
-        tool: template.tool,
-        mode: template.mode,
-        memory: O.memory,
-      });
-    }
-
-    const a = O.agents.get(id);
-    a.name ||= name;
-    a.role ||= template.role || 'Engineer';
-    a.task ||= template.task || 'analysis';
-    a.tool ||= template.tool || 'local workflow';
-    a.mode ||= template.mode || 'autonomous';
-    a.memory ||= O.memory;
-    if (!a.desk) a.desk = template.desk || 'desk-1';
-    return a;
-  }
-
-  if (O.agents.size === 0) {
-    Object.keys(AGENT_TEMPLATES).forEach((name) => ensureAgent(`char-${name}`, name));
-  } else {
-    for (const [id, agent] of O.agents.entries()) {
-      const template = AGENT_TEMPLATES[agent.name] || { desk: agent.desk || 'desk-1', role: agent.role || 'Engineer', task: agent.task || 'analysis', tool: agent.tool || 'local workflow', mode: agent.mode || 'autonomous' };
-      agent.desk ||= template.desk;
-      agent.role ||= template.role;
-      agent.task ||= template.task;
-      agent.tool ||= template.tool;
-      agent.mode ||= template.mode;
-      agent.memory ||= O.memory;
-    }
-  }
-
-  function want(a) {
-    if (a.state === 'leave') return 'door';
-    if (a.state === 'goBreak' || a.state === 'break') return a.bubble === 'coffee' ? 'coffee1' : a.bubble === 'water' ? 'water1' : 'water2';
-    const deskIndex = O.DESKS.indexOf(a.desk);
-    const slot = deskIndex >= 0 ? deskIndex + 1 : 1;
-    return 'spot' + slot;
-  }
-
-  function step(dt) {
-    for (const [id, v] of V) if (!O.agents.has(id)) V.delete(id);
-    for (const a of O.agents.values()) {
-      let v = V.get(a.id);
-      if (!v) {
-        v = { x: N.door[0], y: N.door[1], path: [], target: null, face: 'front-right', moving: false };
-        V.set(a.id, v);
-      }
-      const t = want(a);
-      if (v.target !== t) {
-        v.target = t;
-        v.path = route(nearest(v.x, v.y), t);
-      }
-      const nx = v.path[0];
-      if (nx) {
-        const [px, py] = N[nx];
-        const dx = (px - v.x) * 8;
-        const dy = (py - v.y) * 6;
-        const d = Math.hypot(dx, dy);
-        if (d < 1) {
-          v.x = px;
-          v.y = py;
-          v.path.shift();
-        } else {
-          const s = Math.min(d, 75 * dt) / d;
-          v.x += dx * s / 8;
-          v.y += dy * s / 6;
-          v.face = (dy > 0 ? 'front' : 'rear') + (dx > 0 ? '-right' : '-left');
-        }
-        v.moving = true;
-      } else {
-        v.moving = false;
-        const n = N[v.target];
-        if (n && n[2]) v.face = n[2];
-      }
-    }
-  }
-
-  function hit(x, y) {
-    for (const a of [...O.agents.values()].reverse()) {
-      const v = V.get(a.id);
-      if (v && Math.abs(x - v.x) < 3 && y < v.y + 1 && y > v.y - 15) return { agent: a, v };
-    }
-    for (const h of HOT) {
-      if (Math.abs(x - h[2]) < h[4] / 2 && Math.abs(y - h[3]) < h[5] / 2) return { hot: h };
-    }
-    return null;
-  }
-
-  const say = (text, x, y) => floats.push({ text, x, y, t: performance.now() });
-  const pop = (name, x, y) => pops.push({ name, x, y, t: performance.now() });
-
-  function bubble(text, x, y, ctx = g) {
-    ctx.font = '600 20px sans-serif';
-    ctx.textBaseline = 'middle';
-    const w = ctx.measureText(text).width + 18;
-    const bx = Math.max(4, Math.min(W - w - 4, x - w / 2));
-    ctx.fillStyle = '#fffdf6';
-    ctx.strokeStyle = '#1b2030';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(bx, y - 15, w, 30, 8);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#1b2030';
-    ctx.fillText(text, bx + 9, y);
-  }
-
-  function draw(now, t) {
-    g.clearRect(0, 0, W, H);
-    g.drawImage(img.room, 0, 0, W, H);
-    const dk = dark();
-    if (dk > 0.01 && img.night) {
-      g.globalAlpha = Math.min(1, dk);
-      g.drawImage(img.night, 0, 0, W, H);
-      g.globalAlpha = 1;
-    }
-
-    const list = [];
-    for (const [k, x, y, id] of FURN) {
-      let key = k;
-      if (id === 'coffee' && state.cof > 0) key = 'cofOn';
-      if (id === 'filing' && state.fil > 0) key = 'filO';
-      if (id === 'printer' && state.jam) key = 'prBad';
-      const im = img[key];
-      const sz = ART[key];
-      if (!im || !sz) continue;
-      const sway = id && state['b' + id] ? Math.sin(t * 14) * 3 : 0;
-      list.push([y, () => g.drawImage(im, x * PX - sz[1] * S / 2 + sway, y * PY - sz[2] * S, sz[1] * S, sz[2] * S)]);
-    }
-
-    for (const a of O.agents.values()) {
-      const v = V.get(a.id);
-      if (!v) continue;
-      const set = SET[a.name] || 'employee-3';
-      const [im, flip] = sprite(set, v.face);
-      const n = N[v.target];
-      const z = !v.moving && n && n[3] ? n[3] : v.y;
-      const hh = (a.name === 'Atlas' ? 85 : 78) * S;
-      const bob = v.moving ? Math.abs(Math.sin(t * 12)) * 4 : 0;
-      list.push([z, () => {
-        const fx = v.x * PX;
-        const fy = v.y * PY - bob;
-        g.fillStyle = 'rgba(0,0,0,.25)';
-        g.beginPath();
-        g.ellipse(fx, v.y * PY, 20, 7, 0, 0, 7);
-        g.fill();
-
-        if (im) {
-          const ww = hh * im.width / im.height;
-          if (flip) {
-            g.save();
-            g.translate(fx, 0);
-            g.scale(-1, 1);
-            g.drawImage(im, -ww / 2, fy - hh, ww, hh);
-            g.restore();
-          } else {
-            g.drawImage(im, fx - ww / 2, fy - hh, ww, hh);
-          }
-        } else {
-          g.fillStyle = '#7fe0b5';
-          g.fillRect(fx - 10, fy - 50, 20, 50);
-        }
-
-        const bubbleText = Date.now() < (a.bubbleUntil || 0) && a.bubble ? a.bubble : null;
-        if (bubbleText) bubble(bubbleText, fx, fy - hh - 24);
-      }]);
-    }
-
-    list.sort((p, q) => p[0] - q[0]).forEach((it) => it[1]());
-
-    for (const p of pops.slice()) {
-      const a = (now - p.t) / 1600;
-      if (a > 1) {
-        pops.splice(pops.indexOf(p), 1);
-        continue;
-      }
-      if (img[p.name]) {
-        g.globalAlpha = 1 - a;
-        g.drawImage(img[p.name], p.x * PX - 20, p.y * PY - a * 40, 40, 40);
-        g.globalAlpha = 1;
-      }
-    }
-
-    for (const f of floats.slice()) {
-      const a = (now - f.t) / 1800;
-      if (a > 1) {
-        floats.splice(floats.indexOf(f), 1);
-        continue;
-      }
-      g.globalAlpha = 1 - a * a;
-      bubble(f.text, f.x * PX, f.y * PY - a * 30);
-      g.globalAlpha = 1;
-    }
-
-    const h = state.hover;
-    if (h && h.hot) {
-      const [, label, x, y, w, hh2] = h.hot;
-      g.strokeStyle = '#7fe0b5';
-      g.lineWidth = 3;
-      g.beginPath();
-      g.roundRect((x - w / 2) * PX, (y - hh2 / 2) * PY, w * PX, hh2 * PY, 10);
-      g.stroke();
-      bubble(label, state.mx * PX, state.my * PY - 28);
-    } else if (h && h.agent) {
-      const shortLabel = `${h.agent.name} • ${h.agent.task}`;
-      bubble(shortLabel, h.v.x * PX, h.v.y * PY - 150);
-    }
-  }
-
-  function respond(hot) {
-    const [id, label, x, y] = hot;
-    const w = [...O.agents.values()].filter((a) => a.state !== 'leave');
-    if (id === 'coffee') {
-      state.cof = 6;
-      say('Fresh coffee!', x, y - 8);
-      pop('need-coffee', x, y - 12);
-      O.feed?.(new Date(), 'Office', 'the coffee machine is brewing');
-      O.memory?.remember({ tag: 'coffee', actor: 'machine', detail: 'brew started' });
-    } else if (id === 'cooler') {
-      say('Stay hydrated', x, y - 8);
-      pop('glass-water', x, y - 12);
-      O.feed?.(new Date(), 'Office', 'someone is getting water');
-      O.memory?.remember({ tag: 'hydration', actor: 'agent', detail: 'water break' });
-    } else if (id === 'bell') {
-      for (const a of w) {
-        a.bubble = 'ding!';
-        a.bubbleUntil = Date.now() + 2500;
-      }
-      say('DING!', x, y - 6);
-      pop('star', x, y - 10);
-      O.feed?.(new Date(), 'Office', 'the bell rang, everyone cheers');
-      O.memory?.remember({ tag: 'status', actor: 'bell', detail: 'team sync signal' });
-    } else if (id === 'kanban') {
-      say('Opening the board', x, y - 8);
-      O.memory?.remember({ tag: 'board', actor: 'agent', detail: 'kanban review started' });
-    } else if (id === 'tv') {
-      say(state.alert ? 'Server alert!' : 'All systems green', x, y - 8);
-      O.memory?.remember({ tag: 'monitor', actor: 'dashboard', detail: state.alert ? 'alert active' : 'system green' });
-    } else if (id === 'poster') {
-      say('Ship it!', x, y - 6);
-      pop('rocket', x, y - 10);
-      O.memory?.remember({ tag: 'delivery', actor: 'poster', detail: 'launch enthusiasm' });
-    } else if (id === 'ext') {
-      say('Safety first', x, y - 6); pop('fire', x, y - 4);
-    } else if (id === 'printer') {
-      if (state.jam) {
-        state.jam = false;
-        say('Fixed!', x, y - 8);
-        O.memory?.remember({ tag: 'printer', actor: 'ops', detail: 'resolved jam' });
-      } else {
-        state.jam = Math.random() < 0.4;
-        say(state.jam ? 'Paper jam!' : 'Page printed', x, y - 8);
-        O.memory?.remember({ tag: 'printer', actor: 'ops', detail: state.jam ? 'jam detected' : 'print success' });
-      }
-    } else if (id === 'filing') {
-      state.fil = 3; say('Only paperwork', x, y - 8);
-      O.memory?.remember({ tag: 'docs', actor: 'filing', detail: 'records review' });
-    } else if (id.startsWith('plant')) {
-      say('Thanks, hydrated', x, y - 10);
-      pop('watering-can', x, y - 14);
-      O.memory?.remember({ tag: 'plant', actor: 'agent', detail: 'plant care' });
-    } else if (id === 'window') {
-      say(dark() > 0.5 ? 'Good morning' : 'Lights out', x, y);
-      O.memory?.remember({ tag: 'lighting', actor: 'window', detail: dark() > 0.5 ? 'day mode' : 'night mode' });
-    } else if (id === 'door') {
-      const names = Object.keys(AGENT_TEMPLATES);
-      const available = names.find((k) => ![...O.agents.values()].some((a) => a.name === k));
-      if (available) {
-        O.addAgent?.(`char-${available}`, available);
-        say(`${available} walks in`, x, y - 4);
-        O.memory?.remember({ tag: 'arrival', actor: available, detail: 'joined office' });
-      } else {
-        say('All agents are here', x, y - 4);
-      }
-    }
-  }
-
-  cv.addEventListener('pointerdown', (e) => {
-    const r = cv.getBoundingClientRect();
-    const x = (e.clientX - r.left) * 100 / r.width;
-    const y = (e.clientY - r.top) * 100 / r.height;
-    const h = hit(x, y);
-    if (!h) return;
-    if (h.agent) {
-      const a = h.agent;
-      a.bubble = `${a.role}: ${a.task}`;
-      a.bubbleUntil = Date.now() + 2500;
-      pop('thumb-up', h.v.x, h.v.y - 17);
-      say(a.name, h.v.x, h.v.y - 18);
-      O.memory?.remember({ tag: 'interaction', actor: a.name, detail: a.task });
-    } else {
-      respond(h.hot);
-    }
-  });
-
-  cv.addEventListener('pointermove', (e) => {
-    const r = cv.getBoundingClientRect();
-    const x = (e.clientX - r.left) * 100 / r.width;
-    const y = (e.clientY - r.top) * 100 / r.height;
-    const h = hit(x, y);
-    state.hover = h; state.mx = x; state.my = y;
-    cv.style.cursor = h ? 'pointer' : 'default';
-  });
-
-  cv.addEventListener('pointerleave', () => { state.hover = null; });
-
-  async function boot() {
-    const keys = Object.entries(ART);
-    const loads = keys.map(async ([k, value]) => {
-      img[k] = await loadImg(value[0]);
-    });
-    await Promise.all(loads);
-
-    if (!img.room) {
-      console.warn('Office art could not be loaded; demo will keep running without it.');
-      return;
-    }
-
-    O.memory?.remember({ tag: 'system', actor: 'PAI Office', detail: 'shared memory online' });
-
-    let last = performance.now();
-    const loop = (now) => {
-      const dt = Math.min(0.1, (now - last) / 1000);
-      last = now;
-      for (const key of ['cof', 'fil']) state[key] = Math.max(0, state[key] - dt);
-      for (const key in state) {
-        if (key[0] === 'b' && state[key] > 0) state[key] = Math.max(0, state[key] - dt);
-      }
-      step(dt);
-      draw(now, now / 1000);
-      requestAnimationFrame(loop);
-    };
-
-    requestAnimationFrame(loop);
-  }
-
-  boot();
-})();
+    <script type="module" src="./public/fx.js"></script>
+  </body>
+</html>
