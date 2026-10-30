@@ -3,18 +3,29 @@
   if (!stage) return;
 
   const O = window.__office || {
-    DESKS: ['desk-1', 'desk-2', 'desk-3', 'desk-4', 'desk-5', 'desk-6'],
+    DESKS: ['desk-1', 'desk-2', 'desk-3', 'desk-4', 'desk-5', 'desk-6', 'desk-7', 'desk-8'],
     agents: new Map(),
     feed: (...args) => console.debug('[office]', ...args),
     addAgent: (id, name) => {
       if (!O.agents.has(id)) {
-        O.agents.set(id, { id, name, x: 35, y: 60, state: 'work', bubble: '', bubbleUntil: 0 });
+        O.agents.set(id, { id, name, x: 35, y: 60, state: 'work', bubble: '', bubbleUntil: 0, desk: 'desk-1', task: 'analysis' });
       }
     },
   };
 
   const root = window;
   root.__office = O;
+
+  const AGENT_TEMPLATES = {
+    Atlas: { desk: 'desk-1', role: 'Data Engineering Lead', task: 'designing the lakehouse', tool: 'dbt + SQL + Perplexity' },
+    Nova: { desk: 'desk-2', role: 'Pipeline Engineer', task: 'building ETL orchestration', tool: 'Airflow + Python + Perplexity' },
+    Sage: { desk: 'desk-3', role: 'Data Quality Analyst', task: 'validating freshness and checks', tool: 'Great Expectations + SQL' },
+    Pixel: { desk: 'desk-4', role: 'Analytics Engineer', task: 'curating semantic models', tool: 'dbt + Looker + Perplexity' },
+    Echo: { desk: 'desk-5', role: 'ML Ops Analyst', task: 'monitoring feature pipelines', tool: 'MLflow + Kafka + Perplexity' },
+    Bolt: { desk: 'desk-6', role: 'Security & Governance', task: 'checking access and lineage', tool: 'IAM + governance + Perplexity' },
+    Iris: { desk: 'desk-7', role: 'Research Analyst', task: 'compiling market and source intel', tool: 'Perplexity + notebooks' },
+    Juno: { desk: 'desk-8', role: 'Ops & Alignment', task: 'synchronizing delivery and QA', tool: 'task tracking + dashboards' },
+  };
 
   const CDN = 'https://cdn.jsdelivr.net/gh/W17ant/Claude-Office@1a9ba71251326b34c3caa90d49468e75420d0dd4/public/';
   const BASES = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) ? ['assets/', CDN] : [CDN, 'assets/'];
@@ -165,23 +176,51 @@
   };
 
   function ensureAgent(id, name) {
+    const template = AGENT_TEMPLATES[name] || { desk: 'desk-1', role: 'Engineer', task: 'analysis', tool: 'local workflow' };
     if (!O.agents.has(id)) {
-      O.agents.set(id, { id, name, x: N.door[0], y: N.door[1], state: 'work', bubble: '', bubbleUntil: 0, desk: 'desk-1' });
+      O.agents.set(id, {
+        id,
+        name,
+        x: N.door[0],
+        y: N.door[1],
+        state: 'work',
+        bubble: '',
+        bubbleUntil: 0,
+        desk: template.desk,
+        role: template.role,
+        task: template.task,
+        tool: template.tool,
+      });
     }
+
     const a = O.agents.get(id);
     a.name ||= name;
-    if (!a.desk) a.desk = 'desk-1';
+    a.role ||= template.role || 'Engineer';
+    a.task ||= template.task || 'analysis';
+    a.tool ||= template.tool || 'local workflow';
+    if (!a.desk) a.desk = template.desk || 'desk-1';
     return a;
   }
 
   if (O.agents.size === 0) {
-    ['Atlas', 'Nova', 'Sage'].forEach((name, idx) => ensureAgent(`char-${name}`, name));
+    Object.keys(AGENT_TEMPLATES).forEach((name) => ensureAgent(`char-${name}`, name));
+  } else {
+    for (const [id, agent] of O.agents.entries()) {
+      const template = AGENT_TEMPLATES[agent.name] || { desk: agent.desk || 'desk-1', role: agent.role || 'Engineer', task: agent.task || 'analysis', tool: agent.tool || 'local workflow' };
+      agent.desk ||= template.desk;
+      agent.role ||= template.role;
+      agent.task ||= template.task;
+      agent.tool ||= template.tool;
+      if (!agent.desk && O.DESKS.length > 0) agent.desk = O.DESKS[0];
+    }
   }
 
   function want(a) {
     if (a.state === 'leave') return 'door';
     if (a.state === 'goBreak' || a.state === 'break') return a.bubble === 'coffee' ? 'coffee1' : a.bubble === 'water' ? 'water1' : 'water2';
-    return 'spot' + (O.DESKS.indexOf(a.desk) + 1 || 1);
+    const deskIndex = O.DESKS.indexOf(a.desk);
+    const slot = deskIndex >= 0 ? deskIndex + 1 : 1;
+    return 'spot' + slot;
   }
 
   function step(dt) {
@@ -189,7 +228,7 @@
     for (const a of O.agents.values()) {
       let v = V.get(a.id);
       if (!v) {
-        v = { x: N.door[0], y: N.door[1], path: [], target: null, face: 'front-right', moving: false }; 
+        v = { x: N.door[0], y: N.door[1], path: [], target: null, face: 'front-right', moving: false };
         V.set(a.id, v);
       }
       const t = want(a);
@@ -349,7 +388,8 @@
       g.stroke();
       bubble(label, state.mx * PX, state.my * PY - 28);
     } else if (h && h.agent) {
-      bubble(h.agent.name, h.v.x * PX, h.v.y * PY - 150);
+      const shortLabel = `${h.agent.name} • ${h.agent.task}`;
+      bubble(shortLabel, h.v.x * PX, h.v.y * PY - 150);
     }
   }
 
@@ -398,11 +438,13 @@
     } else if (id === 'window') {
       say(dark() > 0.5 ? 'Good morning' : 'Lights out', x, y);
     } else if (id === 'door') {
-      const names = ['Atlas', 'Nova', 'Sage', 'Pixel', 'Echo'];
-      const available = names.find((k) => ![...O.agents.keys()].some((idKey) => O.agents.get(idKey).name === k));
+      const names = Object.keys(AGENT_TEMPLATES);
+      const available = names.find((k) => ![...O.agents.values()].some((a) => a.name === k));
       if (available) {
         O.addAgent?.(`char-${available}`, available);
         say(`${available} walks in`, x, y - 4);
+      } else {
+        say('All agents are here', x, y - 4);
       }
     }
   }
@@ -415,7 +457,7 @@
     if (!h) return;
     if (h.agent) {
       const a = h.agent;
-      a.bubble = ['Ready when you are.', 'What should we build?', 'Give me a task!'][Math.floor(Math.random() * 3)];
+      a.bubble = `${a.role}: ${a.task}`;
       a.bubbleUntil = Date.now() + 2500;
       pop('thumb-up', h.v.x, h.v.y - 17);
       say(a.name, h.v.x, h.v.y - 18);
