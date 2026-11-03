@@ -129,4 +129,96 @@
   renderList();
   window.setInterval(() => { renderList(); updateLabels(); }, 500);
   window.addEventListener('resize', updateLabels);
+
+  // Pixel-office seating and Atlas's exclusive Saint Bernard companion.
+  // The dog waits one full minute after page load, enters at the illustrated door,
+  // then follows Atlas's rendered sprite position only.
+  const seatingStyle = document.createElement('style');
+  seatingStyle.textContent = `
+    .seat-marker { position:absolute; z-index:7; display:none; transform:translate(-50%,-55%); font-size:clamp(18px,2.4vw,27px); line-height:1; filter:drop-shadow(1px 2px 1px #111); pointer-events:none; }
+    .seat-marker.is-seated { display:block; }
+    .seat-control { margin-top:8px; width:100%; }
+    .bernard { position:absolute; z-index:9; width:clamp(45px,6.2vw,72px); height:auto; left:69%; top:48%; opacity:0; transform:translate(-50%,-100%); transition:left 1s ease-in-out,top 1s ease-in-out,opacity .35s ease; image-rendering:pixelated; pointer-events:none; filter:drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+    .bernard.entered { opacity:1; }
+    .bernard.walking .dog-legs { animation:dog-step .24s steps(2,end) infinite alternate; transform-origin:center; }
+    .bernard-badge { position:absolute; left:50%; bottom:100%; transform:translate(-50%,-3px); padding:3px 5px; border:1px solid rgba(255,255,255,.25); border-radius:5px; background:rgba(8,14,22,.9); color:#fff; font:10px system-ui,sans-serif; white-space:nowrap; }
+    @keyframes dog-step { to { transform:translateY(-2px); } }
+    @media(prefers-reduced-motion:reduce) { .bernard { transition:none; } .bernard.walking .dog-legs { animation:none; } }
+  `;
+  document.head.append(seatingStyle);
+
+  const seated = new Set();
+  const seatMarkers = new Map();
+  function updateSeats() {
+    for (const agent of agents()) {
+      let marker = seatMarkers.get(agent.id);
+      if (!marker) {
+        marker = document.createElement('span'); marker.className = 'seat-marker'; marker.textContent = '🪑'; marker.setAttribute('aria-hidden', 'true'); stage.append(marker); seatMarkers.set(agent.id, marker);
+      }
+      const isSeated = seated.has(agent.id);
+      marker.classList.toggle('is-seated', isSeated);
+      marker.style.left = `${Math.max(3, Math.min(97, Number(agent.x || 0) + 2.3))}%`;
+      marker.style.top = `${Math.max(8, Number(agent.y || 0) - 1)}%`;
+    }
+  }
+  function attachSeatControl() {
+    if (profile.hidden || !selected) return;
+    const actions = profile.querySelector('.panel-actions');
+    if (!actions || actions.querySelector('.seat-control')) return;
+    const button = document.createElement('button');
+    button.className = 'seat-control'; button.type = 'button';
+    const sync = () => { button.textContent = seated.has(selected) ? 'Stand up' : 'Sit at desk & focus'; button.setAttribute('aria-pressed', String(seated.has(selected))); };
+    sync();
+    button.addEventListener('click', () => {
+      const agent = agents().find((item) => item.id === selected); if (!agent) return;
+      if (seated.has(agent.id)) { seated.delete(agent.id); addEvent(`${agent.name} stood up from their desk.`); status.textContent = `${agent.name} is back on their feet`; }
+      else { seated.add(agent.id); addEvent(`${agent.name} settled in to work at their desk.`); status.textContent = `${agent.name} is seated and working`; }
+      sync(); updateSeats();
+    });
+    actions.append(button);
+  }
+  new MutationObserver(attachSeatControl).observe(profile, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+
+  let atlasPosition = null;
+  const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
+  CanvasRenderingContext2D.prototype.drawImage = function(image, ...args) {
+    if (this.canvas?.id === 'scene' && typeof image?.src === 'string' && /sprites\/characters\/Me-1-/.test(image.src) && args.length >= 4) {
+      const [x, y, width, height] = args;
+      const matrix = this.getTransform();
+      const pointX = x + width / 2;
+      const pointY = y + height;
+      atlasPosition = {
+        x: (matrix.a * pointX + matrix.c * pointY + matrix.e) / this.canvas.width * 100,
+        y: (matrix.b * pointX + matrix.d * pointY + matrix.f) / this.canvas.height * 100,
+      };
+    }
+    return originalDrawImage.call(this, image, ...args);
+  };
+
+  const dog = document.createElement('div');
+  dog.className = 'bernard';
+  dog.setAttribute('role', 'img');
+  dog.setAttribute('aria-label', "Atlas's Saint Bernard companion");
+  dog.innerHTML = `<span class="bernard-badge">Atlas's Saint Bernard</span><svg viewBox="0 0 64 48" aria-hidden="true" shape-rendering="crispEdges"><g class="dog-legs" fill="#70452f"><rect x="14" y="34" width="8" height="10"/><rect x="42" y="34" width="8" height="10"/></g><rect x="10" y="14" width="40" height="24" rx="8" fill="#9a6240"/><rect x="20" y="13" width="20" height="20" rx="7" fill="#f1dfbf"/><rect x="42" y="7" width="16" height="20" rx="7" fill="#9a6240"/><rect x="47" y="13" width="11" height="12" rx="5" fill="#f1dfbf"/><rect x="53" y="19" width="5" height="4" fill="#38251f"/><rect x="45" y="7" width="7" height="8" fill="#5b392e"/><rect x="44" y="27" width="13" height="4" fill="#b94135"/><rect x="48" y="27" width="5" height="5" fill="#e6b65b"/><rect x="5" y="17" width="9" height="5" fill="#70452f"/><rect x="27" y="17" width="3" height="3" fill="#30231f"/></svg>`;
+  stage.append(dog);
+  const enteredAt = Date.now() + 60000;
+  let following = false;
+  window.setTimeout(() => {
+    dog.classList.add('entered', 'walking');
+    status.textContent = 'A Saint Bernard is entering to meet Atlas';
+    window.setTimeout(() => { following = true; status.textContent = 'Atlas’s Saint Bernard is following him around the office'; }, 1100);
+  }, 60000);
+
+  function updateDog() {
+    updateSeats(); attachSeatControl();
+    if (!following && Date.now() < enteredAt) return;
+    if (following) {
+      const atlas = agents().find((agent) => agent.name === 'Atlas');
+      const target = atlasPosition || (atlas ? { x: Number(atlas.x || 20), y: Number(atlas.y || 64) } : { x: 20, y: 64 });
+      dog.style.left = `${Math.max(4, Math.min(96, target.x - 3.2))}%`;
+      dog.style.top = `${Math.max(12, Math.min(94, target.y + 2.5))}%`;
+      dog.classList.add('walking');
+    }
+  }
+  window.setInterval(updateDog, 100);
 })();
