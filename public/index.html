@@ -3,59 +3,89 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pixel-office</title>
+    <meta name="theme-color" content="#09111b" />
+    <title>PAI's Office</title>
     <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #09111b;
-        --panel: rgba(10, 18, 28, 0.75);
-        --text: #edf6ff;
-        --muted: #9ab5c8;
-        --accent: #7fe0b5;
+      :root { color-scheme: dark; --text:#edf6ff; --muted:#a9bdcc; --accent:#7fe0b5; --line:rgba(255,255,255,.15); }
+      * { box-sizing:border-box; }
+      html,body { margin:0; min-height:100%; background:linear-gradient(180deg,#0c1620,#1a2a36); color:var(--text); font-family:Inter,system-ui,sans-serif; }
+      body { display:grid; place-items:center; padding:16px; }
+      button,input { font:inherit; color:inherit; }
+      .shell { width:min(1180px,100%); background:rgba(10,18,28,.9); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 22px 70px #0006; }
+      .stage { position:relative; width:100%; aspect-ratio:4/3; min-height:420px; overflow:hidden; background:#121b22; }
+      .stage canvas { width:100%; height:100%; display:block; }
+      .hud { display:flex; justify-content:space-between; gap:12px; padding:12px 16px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+      .office-toolbar { position:absolute; z-index:20; top:12px; left:12px; right:12px; display:flex; align-items:center; gap:8px; pointer-events:none; }
+      .office-toolbar>* { pointer-events:auto; }
+      .office-brand,.office-toolbar button { padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#09111be8; }
+      .office-brand { font-size:12px; font-weight:700; }
+      .office-toolbar button { cursor:pointer; }
+      .toolbar-spacer { flex:1; }
+      .office-search { width:min(200px,30vw); padding:8px; border:1px solid var(--line); border-radius:8px; background:#09111be8; }
+      .office-panel { position:absolute; z-index:18; top:62px; right:12px; bottom:12px; width:min(300px,38%); display:flex; flex-direction:column; gap:8px; overflow:auto; padding:12px; border:1px solid var(--line); border-radius:12px; background:#09111bf2; }
+      .office-panel h2 { margin:0; font-size:17px; }
+      .office-panel h3 { margin:12px 0 6px; color:var(--muted); font-size:12px; }
+      .panel-head { display:flex; justify-content:space-between; align-items:center; }
+      .office-panel button { cursor:pointer; padding:7px; border:1px solid #7fe0b566; border-radius:7px; background:#7fe0b51a; }
+      .agent-list { display:grid; gap:5px; }
+      .agent-row { display:flex; gap:8px; text-align:left; align-items:center; width:100%; }
+      .agent-row-copy { display:grid; }
+      .agent-row-copy small,.panel-hint,.panel-muted { color:var(--muted); font-size:11px; }
+      .agent-dot { width:9px; height:9px; border-radius:50%; background:var(--accent); }
+      .profile-card,.task-card { margin:6px 0; padding:10px; border:1px solid var(--line); border-radius:9px; background:#ffffff08; }
+      .profile-card h2 { margin:0; }
+      .profile-card dl { display:grid; gap:7px; font-size:12px; }
+      .profile-card dt { color:var(--muted); font-size:10px; text-transform:uppercase; }
+      .profile-card dd { margin:2px 0 0; }
+      .panel-actions { display:grid; gap:6px; margin-top:10px; }
+      .task-board { display:grid; gap:5px; }
+      .activity-list { display:grid; gap:5px; margin:0; padding-left:16px; color:var(--muted); font-size:11px; }
+      .chat-panel { position:absolute; z-index:16; right:330px; bottom:12px; width:min(260px,calc(100% - 24px)); border:1px solid var(--line); border-radius:10px; background:#09111bed; overflow:hidden; }
+      .chat-log { max-height:80px; overflow:auto; padding:7px; font-size:11px; }
+      .chat-form { display:flex; gap:5px; padding:6px; border-top:1px solid var(--line); }
+      .chat-form input { min-width:0; flex:1; padding:7px; border:1px solid var(--line); border-radius:6px; background:#ffffff0b; }
+      .chat-form button { border:1px solid #7fe0b566; border-radius:6px; background:#7fe0b51a; }
+      .privacy-banner { position:absolute; z-index:16; left:12px; bottom:12px; padding:6px 8px; border:1px solid var(--line); border-radius:7px; background:#09111bd9; font-size:10px; }
+      .welcome-overlay { position:absolute; inset:0; z-index:10; display:grid; place-items:center; pointer-events:none; background:#09111b55; animation:fade 5s forwards; }
+      .welcome-box { padding:16px 22px; border:1px solid #7fe0b577; border-radius:12px; background:#09111bc9; text-align:center; }
+      .welcome-box h1 { margin:0 0 6px; font-size:clamp(20px,3vw,34px); }
+      .welcome-box p { margin:0; color:var(--muted); }
+      @keyframes fade { 0%,65%{opacity:1} 100%{opacity:0} }
+      .scene-label { position:absolute; z-index:8; transform:translate(-50%,-100%); padding:3px 6px; border:1px solid #ffffff44; border-radius:5px; background:#09111bdc; color:white; font-size:10px; pointer-events:none; }
+      .scene-label[hidden],[hidden] { display:none!important; }
+      .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+      button:focus-visible,input:focus-visible { outline:3px solid #b2ffe0; outline-offset:2px; }
+      @media(max-width:760px) {
+        body { padding:0; }.shell { width:100%; border-radius:0; }.stage { min-height:76vh; aspect-ratio:auto; }
+        .office-toolbar { top:7px; left:7px; right:7px; flex-wrap:wrap; }.office-search { width:42vw; }.toolbar-spacer { display:none; }
+        .office-panel { top:auto; left:7px; right:7px; bottom:7px; width:auto; max-height:45%; }.office-panel .agent-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .chat-panel { top:54px; right:7px; bottom:auto; width:min(230px,60%); }.privacy-banner { top:60px; bottom:auto; left:7px; max-width:32%; }
       }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: linear-gradient(180deg, #0c1620 0%, #1a2a36 100%);
-        color: var(--text);
-        font-family: Inter, system-ui, sans-serif;
-      }
-      .shell {
-        width: min(1100px, calc(100vw - 32px));
-        background: var(--panel);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 18px;
-        box-shadow: 0 22px 70px rgba(0,0,0,0.35);
-        overflow: hidden;
-      }
-      .stage {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 4 / 3;
-        background: #121b22;
-      }
-      .hud {
-        display: flex;
-        justify-content: space-between;
-        padding: 14px 16px;
-        border-top: 1px solid rgba(255,255,255,0.08);
-        color: var(--muted);
-        font-size: 13px;
-      }
+      @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
     </style>
   </head>
   <body>
-    <div class="shell">
-      <div class="stage" aria-label="Office scene" id="office-stage"></div>
-      <div class="hud">
-        <span>pixel-office demo</span>
-        <span>public-ready</span>
-      </div>
-    </div>
-
-    <script type="module" src="./fx.js"></script>
+    <main class="shell">
+      <section class="stage" id="office-stage" aria-label="Interactive pixel office">
+        <div class="welcome-overlay" id="welcome-overlay"><div class="welcome-box"><h1>Welcome to PAI's Office</h1><p>Choose a teammate to see what they're working on.</p></div></div>
+        <div class="office-toolbar" aria-label="Office controls">
+          <div class="office-brand">PAI's Office</div>
+          <label class="sr-only" for="office-search">Find a teammate</label><input class="office-search" id="office-search" type="search" placeholder="Find a teammate…" />
+          <span class="toolbar-spacer"></span><button id="toggle-labels" type="button" aria-pressed="false">Show labels</button><button id="toggle-board" type="button" aria-expanded="false">Task board</button>
+        </div>
+        <aside class="office-panel" id="office-panel" aria-label="Teammates and office details">
+          <div class="panel-head"><h2 id="panel-title">Your teammates</h2><button id="close-panel" type="button" aria-label="Close panel">×</button></div>
+          <p class="panel-hint" id="panel-hint">Select a character in the office or use this list.</p>
+          <div class="agent-list" id="agent-list" aria-label="Teammates"></div>
+          <section id="profile-view" hidden></section><section id="board-view" hidden></section>
+          <section><h3>Recent activity</h3><ul class="activity-list" id="activity-list"><li>Office is ready to explore.</li></ul></section>
+        </aside>
+        <div class="privacy-banner">Demo only · no telemetry</div>
+        <div class="chat-panel" aria-label="Agent command demo"><div class="chat-log" id="chat-log" aria-live="polite"></div><form class="chat-form" id="agent-chat-form"><label class="sr-only" for="agent-chat-input">Send a demo command to an agent</label><input id="agent-chat-input" placeholder="Atlas, review the release"/><button id="send-chat" type="submit">Send</button></form></div>
+      </section>
+      <footer class="hud"><span>Interactive office · demo data</span><span id="office-status" aria-live="polite">Select a teammate to get started</span></footer>
+    </main>
+    <script type="module" src="./fx.js?v=3"></script>
+    <script type="module" src="./interactions.js?v=3"></script>
   </body>
 </html>
