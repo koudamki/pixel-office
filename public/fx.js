@@ -2,15 +2,30 @@
   const stage = document.querySelector('.stage') || document.getElementById('office-stage');
   if (!stage) return;
 
-  const AGENT_NAMES = ['Atlas', 'Nova', 'Sage', 'Pixel', 'Echo', 'Bolt', 'Iris', 'Juno', 'Milo', 'Astra', 'Hux', 'Lena', 'Orion', 'Vera', 'Theo', 'Dahlia'];
+  const AGENT_NAMES = ['Pranav', 'Nova', 'Sage', 'Pixel', 'Echo', 'Senior Lv4', 'Iris', 'Juno', 'Milo', 'Astra', 'Hux', 'Lena', 'Orion', 'Vera', 'Theo', 'Dahlia'];
+  const COFFEE_PAIR = new Set(['Pranav', 'Senior Lv4']);
+  const AGENT_ALIASES = {
+    atlas: 'Pranav',
+    pranav: 'Pranav',
+    bolt: 'Senior Lv4',
+    'senior lv4': 'Senior Lv4',
+    'senior-lv4': 'Senior Lv4',
+  };
+
+  function canonicalAgentName(name) {
+    const value = String(name ?? '').trim();
+    if (!value) return value;
+    const key = value.toLowerCase().replace(/[_-]+/g, ' ');
+    return AGENT_ALIASES[key] || value;
+  }
 
   const AGENT_TEMPLATES = {
-    Atlas: { desk: 'desk-1', role: 'Data Engineering Lead', task: 'reviewing pipeline priorities', tool: 'dbt + SQL + Perplexity', mode: 'lead' },
+    Pranav: { desk: 'desk-1', role: 'Data Engineering Lead', task: 'reviewing pipeline priorities', tool: 'dbt + SQL + Perplexity', mode: 'lead' },
     Nova: { desk: 'desk-2', role: 'Pipeline Engineer', task: 'optimizing ETL flow', tool: 'Airflow + Python + Perplexity', mode: 'autonomous' },
     Sage: { desk: 'desk-3', role: 'Data Quality Analyst', task: 'checking freshness checks', tool: 'Great Expectations + SQL', mode: 'autonomous' },
     Pixel: { desk: 'desk-4', role: 'Analytics Engineer', task: 'curating semantic models', tool: 'dbt + Looker + Perplexity', mode: 'autonomous' },
     Echo: { desk: 'desk-5', role: 'ML Ops Analyst', task: 'monitoring model workflows', tool: 'MLflow + Kafka + Perplexity', mode: 'autonomous' },
-    Bolt: { desk: 'desk-6', role: 'Security & Governance', task: 'reviewing access controls', tool: 'IAM + governance + Perplexity', mode: 'autonomous' },
+    'Senior Lv4': { desk: 'desk-6', role: 'Security & Governance', task: 'reviewing access controls', tool: 'IAM + governance + Perplexity', mode: 'autonomous' },
     Iris: { desk: 'desk-7', role: 'Research Analyst', task: 'summarizing market signals', tool: 'Perplexity + notebooks', mode: 'autonomous' },
     Juno: { desk: 'desk-8', role: 'Ops & Alignment', task: 'coordinating delivery queues', tool: 'task tracking + dashboards', mode: 'sub-agent' },
     Milo: { desk: 'desk-9', role: 'Product Manager', task: 'prioritizing roadmap updates', tool: 'Jira + stakeholder notes', mode: 'lead' },
@@ -43,12 +58,12 @@
   };
 
   const START_LAYOUT = {
-    Atlas: { desk: 'desk-1', x: 20, y: 64, face: 'front-right' },
+    Pranav: { desk: 'desk-1', x: 20, y: 64, face: 'front-right' },
     Nova: { desk: 'desk-2', x: 32, y: 64, face: 'front-right' },
     Sage: { desk: 'desk-3', x: 46, y: 64, face: 'front-right' },
     Pixel: { desk: 'desk-4', x: 58, y: 64, face: 'front-right' },
     Echo: { desk: 'desk-5', x: 72, y: 64, face: 'front-left' },
-    Bolt: { desk: 'desk-6', x: 30, y: 80, face: 'front-right' },
+    'Senior Lv4': { desk: 'desk-6', x: 30, y: 80, face: 'front-right' },
     Iris: { desk: 'desk-7', x: 52, y: 82, face: 'front-right' },
     Juno: { desk: 'desk-8', x: 68, y: 82, face: 'front-right' },
     Milo: { desk: 'desk-9', x: 18, y: 88, face: 'front-left' },
@@ -62,12 +77,12 @@
   };
 
   const TASK_LIBRARY = {
-    Atlas: ['reviewing pipeline priorities', 'designing warehouse improvements', 'triaging data issues', 'pairing on architecture', 'benchmarking system health', 'updating the roadmap'],
+    Pranav: ['reviewing pipeline priorities', 'designing warehouse improvements', 'triaging data issues', 'pairing on architecture', 'benchmarking system health', 'updating the roadmap'],
     Nova: ['optimizing ETL flow', 'fixing pipeline retries', 'debugging orchestration', 'refining data contracts', 'monitoring job health', 'improving automation'],
     Sage: ['checking freshness checks', 'validating data quality', 'auditing anomalies', 'reviewing rules', 'sanity-checking ingestion', 'cleaning pipeline drift'],
     Pixel: ['curating semantic models', 'refining metrics definitions', 'documenting BI logic', 'designing dashboards', 'reviewing dependencies', 'improving model clarity'],
     Echo: ['monitoring model workflows', 'checking feature drift', 'reviewing experiment data', 'tuning serving health', 'triaging alert noise', 'refining retraining loops'],
-    Bolt: ['reviewing access controls', 'auditing lineage', 'checking compliance rules', 'refreshing security policy', 'validating IAM changes', 'tracking governance actions'],
+    'Senior Lv4': ['reviewing access controls', 'auditing lineage', 'checking compliance rules', 'refreshing security policy', 'validating IAM changes', 'tracking governance actions'],
     Iris: ['summarizing market signals', 'comparing source intel', 'researching competitive notes', 'mapping opportunity themes', 'building research brief', 'reviewing external inputs'],
     Juno: ['coordinating delivery queues', 'aligning QA updates', 'balancing dependencies', 'tracking cross-team tasks', 'resolving blockers', 'syncing sprint context'],
     Milo: ['prioritizing roadmap updates', 'aligning stakeholders', 'reviewing sprint scope', 'clearing blockers', 'planning delivery milestones', 'updating product notes'],
@@ -122,15 +137,26 @@
   function parseAgentCommand(raw) {
     const text = String(raw || '').trim();
     if (!text) return null;
-    const match = text.match(/^(atlas|nova|sage|pixel|echo|bolt|iris|juno|milo|astra|hux|lena|orion|vera|theo|dahlia)\s*[:,-]?\s*(.*)$/i);
-    if (match) {
-      const name = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
-      return { name, instruction: (match[2] || '').trim() };
+
+    const normalizedText = text.replace(/\s+/g, ' ');
+    const orderedNames = [...AGENT_NAMES].sort((a, b) => b.length - a.length);
+    const directMatch = normalizedText.match(/^([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z0-9]+)*)\s*[:,-]?\s*(.*)$/);
+    if (directMatch) {
+      const candidate = canonicalAgentName(directMatch[1]);
+      const known = orderedNames.find((name) => name.toLowerCase() === candidate.toLowerCase());
+      if (known) return { name: known, instruction: (directMatch[2] || '').trim() };
     }
-    const fallback = text.match(/^(.*?)(?:\s+do\s+|\s+please\s+|\s*:\s*)(.+)$/i);
+
+    const commandName = orderedNames.find((name) => normalizedText.toLowerCase().startsWith(name.toLowerCase()));
+    if (commandName) {
+      const remainder = normalizedText.slice(commandName.length).trim();
+      return { name: commandName, instruction: remainder.replace(/^[:,-]?\s*/, '') };
+    }
+
+    const fallback = normalizedText.match(/^(.*?)(?:\s+do\s+|\s+please\s+|\s*:\s*)(.+)$/i);
     if (fallback) {
-      const candidate = fallback[1].trim();
-      const known = AGENT_NAMES.find((n) => n.toLowerCase() === candidate.toLowerCase());
+      const candidate = canonicalAgentName(fallback[1].trim());
+      const known = orderedNames.find((name) => name.toLowerCase() === candidate.toLowerCase());
       if (known) return { name: known, instruction: (fallback[2] || '').trim() };
     }
     return null;
@@ -139,7 +165,7 @@
   function applyCommand(commandText) {
     const parsed = parseAgentCommand(commandText);
     if (!parsed) {
-      appendChat('Use format like: Atlas, start coffee break', true);
+      appendChat('Use format like: Pranav, start coffee break', true);
       return false;
     }
     const agent = [...O.agents.values()].find((a) => a.name.toLowerCase() === parsed.name.toLowerCase());
@@ -236,9 +262,10 @@
   };
 
   const G = {};
-  const edges = 'door-door2 door-door3 door2-water1 door3-coffee1 door3-spot10 water1-water2 water1-spot5 spot6-spot4 spot6-water1 spot4-spot5 spot4-spot3 spot4-filing spot5-filing spot5-spot9 spot7-spot8 spot8-spot10 spot9-spot10 spot11-spot12 spot12-spot13 spot13-spot14 spot14-spot15 spot15-spot16 spot16-door3 spot11-door2 spot16-printer door3-spot16'.split(' ');
-  for (const e of edges) {
+  const edges = 'door-door2 door-door3 door2-water1 door3-coffee1 door3-spot10 water1-water2 water1-spot5 spot6-spot4 spot6-water1 spot4-spot5 spot4-spot3 spot4-filing spot5-filing spot5-spot9 spot7-spot8 spot7-spot9 spot7-spot6 spot8-spot10 spot8-spot9 spot9-spot10 spot9-spot5 spot9-spot4 spot10-spot15 spot10-spot16 spot11-spot12 spot11-spot3 spot12-spot4 spot12-spot13 spot13-spot14 spot14-spot15 spot15-spot16';
+  for (const e of edges.split(' ')) {
     const [a, b] = e.split('-');
+    if (!a || !b) continue;
     (G[a] ||= []).push(b);
     (G[b] ||= []).push(a);
   }
@@ -266,7 +293,7 @@
     return p;
   }
 
-  const SET = { Atlas: 'Me-1', Nova: 'dev-1', Sage: 'explore-1', Pixel: 'Frontend-dev-1', Echo: 'employee-1', Bolt: 'security-audit-1', Iris: 'employee-2', Juno: 'dev-2', Milo: 'employee-3', Astra: 'employee-4', Hux: 'Frontend-dev-2', Lena: 'employee-5', Orion: 'employee-6', Vera: 'employee-7', Theo: 'employee-8', Dahlia: 'employee-9', Claude: 'Claude-1' };
+  const SET = { Pranav: 'Me-1', Nova: 'dev-1', Sage: 'explore-1', Pixel: 'Frontend-dev-1', Echo: 'employee-1', 'Senior Lv4': 'security-audit-1', Iris: 'employee-2', Juno: 'dev-2', Milo: 'employee-3', Astra: 'employee-3', Hux: 'employee-3', Lena: 'employee-3', Orion: 'employee-3', Vera: 'employee-3', Theo: 'employee-3', Dahlia: 'employee-3' };
   const MIRROR = { 'front-left': 'front-right', 'front-right': 'front-left', 'rear-left': 'rear-right', 'rear-right': 'rear-left' };
   const chars = {};
 
@@ -376,6 +403,7 @@
   function want(a) {
     if (a.state === 'leave') return 'door';
     if (a.state === 'manual') return 'door';
+    if (COFFEE_PAIR.has(a.name) && (a.state === 'break' || a.state === 'goBreak' || a.task?.toLowerCase().includes('coffee'))) return 'coffee1';
     if (a.state === 'goBreak' || a.state === 'break') return a.bubble === 'coffee' ? 'coffee1' : a.bubble === 'water' ? 'water1' : 'water2';
     const deskIndex = O.DESKS.indexOf(a.desk);
     const slot = deskIndex >= 0 ? deskIndex + 1 : 1;
@@ -423,16 +451,24 @@
     agent.task = label;
     const normalized = label.toLowerCase();
 
+    if (COFFEE_PAIR.has(agent.name) && (normalized.includes('coffee') || normalized.includes('break') || normalized.includes('reset') || normalized.includes('water'))) {
+      agent.bubble = 'coffee queue';
+      agent.state = 'break';
+      agent.task = 'waiting for coffee';
+      agent.bubbleUntil = Date.now() + 3200;
+      return;
+    }
+
     if (normalized.includes('coffee') || normalized.includes('water') || normalized.includes('break') || normalized.includes('stretch') || normalized.includes('reset') || normalized.includes('pantry')) {
       agent.bubble = label;
       agent.state = 'break';
-    } else if (normalized.includes('call') || normalized.includes('sync') || normalized.includes('meeting') || normalized.includes('review') || normalized.includes('standup') || normalized.includes('check-in')) {
+    } else if (normalized.includes('call') || normalized.includes('sync') || normalized.includes('meeting') || normalized.includes('review') || normalized.includes('standup') || normalized.includes('stakeholder')) {
       agent.bubble = label;
       agent.state = 'social';
-    } else if (normalized.includes('quiet') || normalized.includes('idle') || normalized.includes('notes') || normalized.includes('inbox') || normalized.includes('status') || normalized.includes('brief')) {
+    } else if (normalized.includes('quiet') || normalized.includes('idle') || normalized.includes('notes') || normalized.includes('inbox') || normalized.includes('status') || normalized.includes('triag')) {
       agent.bubble = label;
       agent.state = 'idle';
-    } else if (normalized.includes('focus') || normalized.includes('work') || normalized.includes('writing') || normalized.includes('design') || normalized.includes('reviewing') || normalized.includes('updating') || normalized.includes('checking')) {
+    } else if (normalized.includes('focus') || normalized.includes('work') || normalized.includes('writing') || normalized.includes('design') || normalized.includes('reviewing') || normalized.includes('priorit')) {
       agent.bubble = label;
       agent.state = 'work';
     } else {
@@ -479,6 +515,18 @@
         v.moving = false;
         const n = N[v.target];
         if (n && n[2]) v.face = n[2];
+      }
+
+      if (COFFEE_PAIR.has(a.name) && v.target === 'coffee1' && !v.path.length) {
+        const order = ['Pranav', 'Senior Lv4'];
+        const index = order.indexOf(a.name);
+        const queueX = N.coffee1[0] + (index - 0.5) * 1.2;
+        const queueY = N.coffee1[1] + (index - 0.5) * 0.3;
+        v.x = queueX;
+        v.y = queueY;
+        v.moving = false;
+        a.bubble = 'coffee together';
+        a.bubbleUntil = Date.now() + 3000;
       }
     }
   }
@@ -543,7 +591,7 @@
       const [im, flip] = sprite(set, v.face);
       const n = N[v.target];
       const z = !v.moving && n && n[3] ? n[3] : v.y;
-      const hh = (a.name === 'Atlas' ? 85 : 78) * S;
+      const hh = (a.name === 'Pranav' ? 85 : 78) * S;
       const bob = v.moving ? Math.abs(Math.sin(t * 12)) * 4 : 0;
       list.push([z, () => {
         const fx = v.x * PX;
@@ -722,7 +770,7 @@
   }
 
   appendChat('System: local-only mode active. No data collection.', true);
-  appendChat('Example: Atlas, start coffee break', false);
+  appendChat('Example: Pranav, start coffee break', false);
 
   async function boot() {
     const keys = Object.entries(ART);
