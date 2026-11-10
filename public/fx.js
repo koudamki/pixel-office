@@ -561,6 +561,29 @@
     ctx.fillText(text, bx + 9, y);
   }
 
+  // ambient layer: dust motes in the light, coffee steam, soft vignette
+  const motes = Array.from({ length: 28 }, (_, i) => ({ x: (i * 97) % W, y: (i * 61) % H, r: 1 + (i % 3), s: 4 + (i % 5) * 3, p: i }));
+  let vig;
+  function ambient(now, t) {
+    g.fillStyle = 'rgba(255,236,190,.35)';
+    for (const m of motes) {
+      m.y -= m.s * 0.016; if (m.y < -4) m.y = H + 4;
+      g.globalAlpha = 0.25 + 0.25 * Math.sin(t * 1.5 + m.p);
+      g.fillRect(m.x + Math.sin(t * .6 + m.p) * 14, m.y, m.r, m.r);
+    }
+    g.globalAlpha = 1;
+    const cf = FURN.find((f) => f[3] === 'coffee');
+    if (cf) {
+      for (let i = 0; i < 5; i++) {
+        const k = ((t * .5 + i / 5) % 1);
+        g.fillStyle = `rgba(255,255,255,${0.35 * (1 - k)})`;
+        g.fillRect(cf[1] * PX - 6 + Math.sin(k * 7 + i) * 8, cf[2] * PY - 95 - k * 55, 5, 5);
+      }
+    }
+    vig ||= (() => { const r = g.createRadialGradient(W / 2, H / 2, H * .45, W / 2, H / 2, H * .85); r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(1, 'rgba(4,8,14,.55)'); return r; })();
+    g.fillStyle = vig; g.fillRect(0, 0, W, H);
+  }
+
   function draw(now, t) {
     g.clearRect(0, 0, W, H);
     g.drawImage(img.room, 0, 0, W, H);
@@ -592,7 +615,7 @@
       const n = N[v.target];
       const z = !v.moving && n && n[3] ? n[3] : v.y;
       const hh = (a.name === 'Pranav' ? 85 : 78) * S;
-      const bob = v.moving ? Math.abs(Math.sin(t * 12)) * 4 : 0;
+      const bob = v.moving ? Math.abs(Math.sin(t * 12)) * 4 : Math.sin(t * 2 + a.name.length) * 1.5;
       list.push([z, () => {
         const fx = v.x * PX;
         const fy = v.y * PY - bob;
@@ -647,6 +670,8 @@
       bubble(f.text, f.x * PX, f.y * PY - a * 30);
       g.globalAlpha = 1;
     }
+
+    ambient(now, t);
 
     const h = state.hover;
     if (h && h.hot) {
@@ -781,6 +806,10 @@
 
     if (!img.room) {
       console.warn('Office art could not be loaded; demo will keep running without it.');
+      const m = document.createElement('div');
+      m.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;text-align:center;font:20px VT323,monospace;color:#ffc46b;z-index:5';
+      m.innerHTML = '<div>Office art failed to load.<br>Check your connection and <a href="" style="color:#7fe0b5">reload</a>.</div>';
+      stage.appendChild(m);
       return;
     }
 

@@ -63,6 +63,12 @@
       }
       @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
     </style>
+  <meta name="description" content="A tiny interactive pixel-art office. Click a teammate, send commands, watch the day turn to night." />
+    <meta property="og:title" content="Pixel Office" /><meta property="og:description" content="A living pixel-art office you can poke at." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%98%95%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./theme.css" />
   </head>
   <body>
     <main class="shell">
@@ -87,5 +93,6 @@
     </main>
     <script type="module" src="./fx.js?v=3"></script>
     <script type="module" src="./interactions.js?v=3"></script>
+      <script type="module" src="./polish.js?v=1"></script>
   </body>
 </html>
