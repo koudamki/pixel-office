@@ -264,6 +264,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <Segmented label={tr('ui.settings.browser.dayNightAria')} value={dayNightMode} choices={dayNight()} onChange={onDayNightMode} testId="sp-daynight" />
         </div>
 
+        <div hidden>
         <div className="sp-row">
           <span className="sp-label">{tr('ui.settings.browser.season')}</span>
           <Select label={tr('ui.settings.browser.season')} value={seasonPref} groups={seasonGroups()} onChange={changeSeason} testId="sp-season" />
@@ -284,6 +285,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         {!seasonPending && look && seasonInForce !== 'auto' && look.undrawn && (
           <div className="sp-note" data-testid="sp-season-now">{tr('ui.settings.browser.nowUndrawn', { look: look.text })}</div>
         )}
+        </div>
 
         <div className="sp-row">
           <span className="sp-label">{tr('ui.settings.browser.sound')}</span>

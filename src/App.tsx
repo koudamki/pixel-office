@@ -4,7 +4,8 @@ import './styles/office.css'
 import './styles/rooms.css'
 import './styles/incident.css'
 import './styles/meters.css'
-import SlackChat, { ChatMessage, getAvatarSrc } from './components/SlackChat'
+import { ChatMessage, getAvatarSrc } from './components/SlackChat'
+import { dsTitle, dsTask } from './dsSquad'
 import Character from './components/Character'
 import ResilientImg from './components/ResilientImg'
 import FurnitureRenderer from './components/FurnitureRenderer'
@@ -1010,9 +1011,9 @@ const App: React.FC = () => {
           type: 'agent_spawned',
           agent: {
             id: `sim-${sim.role}`,
-            name: cfg.title,
+            name: dsTitle(sim.role, cfg.title),
             role: sim.role,
-            task: sim.task,
+            task: dsTask(sim.role, sim.task),
           },
         })
       }, spawnAt))
@@ -1097,7 +1098,7 @@ const App: React.FC = () => {
         type: 'agent_spawned',
         agent: {
           id: 'sim-explore',
-          name: exploreCfg.title,
+          name: dsTitle('Explore', exploreCfg.title),
           role: 'Explore',
           task: 'Searching codebase for API endpoint patterns',
         },
@@ -1126,7 +1127,7 @@ const App: React.FC = () => {
           type: 'agent_spawned',
           agent: {
             id: 'sim-debugger',
-            name: cfg.title,
+            name: dsTitle('debugger', cfg.title),
             role: 'debugger',
             task: 'Investigating null pointer in payment webhook handler',
           },
@@ -1757,21 +1758,7 @@ const App: React.FC = () => {
         sessions={<SessionStrip sessions={sessions} agents={agents} />}
         permissions={<PermissionCards cards={permissionCards} dispatch={dispatchPermissions} readOnly={readOnly} explainRemember />}
         pending={permissionCards.filter(c => !c.resolved).length}
-        chat={
-          <SlackChat
-            messages={messages}
-            muted={muted}
-            volume={volume}
-            onToggleMute={handleToggleMute}
-            onVolumeChange={handleVolumeChange}
-            onSendMessage={handleSendMessage}
-            dayPhase={effectivePhase}
-            typingUser={chatTypingUser}
-            lastSeenId={lastSeenId}
-            onReaction={handleReaction}
-            readOnly={readOnly}
-          />
-        }
+        chat={null}
         meters={<Meters onNotice={text => addMsg('system', 'default', '#8b8d91', text, true)} />}
         settings={
           <SettingsPanel
@@ -1865,21 +1852,7 @@ const App: React.FC = () => {
       <div className="chat-column">
       {!isSimMode && <PermissionCards cards={permissionCards} dispatch={dispatchPermissions} readOnly={readOnly} />}
       <Meters onNotice={text => addMsg('system', 'default', '#8b8d91', text, true)} />
-      <SlackChat
-        messages={messages}
-        muted={muted}
-        volume={volume}
-        onToggleMute={handleToggleMute}
-        onVolumeChange={handleVolumeChange}
-        onSendMessage={handleSendMessage}
-        autoTypeText={autoTypeText}
-        dayPhase={effectivePhase}
-        typingUser={chatTypingUser}
-        lastSeenId={lastSeenId}
-        onReaction={handleReaction}
-        readOnly={readOnly}
-        mentions={chatMentions}
-      />
+      
       </div>
       </div>
       <StatusStrip office={officeRef} sessions={sessions} readOnly={readOnly} />

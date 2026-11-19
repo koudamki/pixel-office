@@ -48,6 +48,8 @@ export interface FurnitureItem {
   state?: string      // e.g. 'empty', 'occupied', 'brewing'
   interactive?: boolean
   label?: string
+  scale?: number      // 1 = the sprite's own size
+  filter?: string     // CSS filter, e.g. a colour tint
 }
 
 export type SpriteFacing = 'front-left' | 'front-right' | 'rear-left' | 'rear-right'
@@ -74,6 +76,7 @@ export interface AgentSpot {
   facing?: 'up' | 'down' | 'left' | 'right'
   spriteFacing?: SpriteFacing  // which direction the agent faces when at this spot
   zIndex?: number  // explicit z-index override (for agents behind desks)
+  bossOnly?: boolean  // never handed to an agent, only the boss sits here
 }
 
 /**
@@ -360,6 +363,7 @@ export const ROOMS: Record<RoomId, Room> = {
       { id: 'meet-chair-6', type: 'meeting-chair', sprite: 'meeting-chair-rear-left', x: 52.3, y: 71.2, zIndex: 71 },
       { id: 'meet-chair-7', type: 'meeting-chair', sprite: 'meeting-chair-rear-left', x: 57.8, y: 67.3, zIndex: 72 },
       { id: 'meet-chair-8', type: 'meeting-chair', sprite: 'meeting-chair-rear-left', x: 63.3, y: 63.5, zIndex: 73 },
+      { id: 'meet-chair-boss', type: 'meeting-chair', sprite: 'cafe-chair-rear-right', x: 31.6, y: 74.2, zIndex: 58, scale: 1.6, filter: 'sepia(1) saturate(2.6) hue-rotate(-38deg) brightness(0.55) contrast(1.15)' },
     ],
     connections: [
       { toRoom: 'corridor', position: { x: 68, y: 51.5 }, label: 'Corridor', exitFacing: 'rear-right', entryFacing: 'front-left', door: { x: 64.8, y: 21.8, w: 8.4, h: 28.4 } },
@@ -373,6 +377,7 @@ export const ROOMS: Record<RoomId, Room> = {
       { id: 'meet-6', type: 'meeting-seat', x: 52.0, y: 70.3, facing: 'up', spriteFacing: 'rear-left', zIndex: 61 },
       { id: 'meet-7', type: 'meeting-seat', x: 57.5, y: 66.5, facing: 'up', spriteFacing: 'rear-left', zIndex: 62 },
       { id: 'meet-8', type: 'meeting-seat', x: 63.0, y: 62.6, facing: 'up', spriteFacing: 'rear-left', zIndex: 63 },
+      { id: 'meet-9', type: 'meeting-seat', x: 32.2, y: 73.8, facing: 'right', spriteFacing: 'rear-right', zIndex: 59, bossOnly: true },
     ],
     entryPoint: { x: 68, y: 51.5 },
     walkableArea: [{ x: 43.8, y: 37.0 }, { x: 93.0, y: 63.9 }, { x: 53.7, y: 93.1 }, { x: 5.9, y: 63.4 }],
@@ -385,7 +390,8 @@ export const ROOMS: Record<RoomId, Room> = {
       { id: 'W-meet-near-1', x: 75.0, y: 65.7, connections: ['W-meet-in', 'W-meet-near-2'] },
       { id: 'W-meet-near-2', x: 63.8, y: 74.0, connections: ['W-meet-7', 'W-meet-near-1', 'W-meet-near-3'] },
       { id: 'W-meet-near-3', x: 52.1, y: 82.5, connections: ['W-meet-5', 'W-meet-6', 'W-meet-end', 'W-meet-near-2'] },
-      { id: 'W-meet-end', x: 31.2, y: 75.2, connections: ['W-meet-far-3', 'W-meet-near-3'] },
+      { id: 'W-meet-end', x: 31.2, y: 75.2, connections: ['W-meet-far-3', 'W-meet-near-3', 'W-meet-9'] },
+      { id: 'W-meet-9', x: 32.2, y: 73.8, connections: ['W-meet-end'] },
       { id: 'W-meet-1', x: 33.3, y: 64.4, connections: ['W-meet-far-2'] },
       { id: 'W-meet-2', x: 38.6, y: 60.8, connections: ['W-meet-far-2'] },
       { id: 'W-meet-3', x: 43.9, y: 57.1, connections: ['W-meet-far-2'] },
@@ -420,8 +426,10 @@ export const ROOMS: Record<RoomId, Room> = {
       { id: 'srv-rack-4', type: 'server-rack', sprite: 'server-rack-1', x: 26.9, y: 55.0, zIndex: 33 },
       { id: 'srv-rack-5', type: 'server-rack', sprite: 'server-rack-2', x: 22.1, y: 58.3, zIndex: 34 },
       { id: 'srv-rack-6', type: 'server-rack', sprite: 'server-rack-3', x: 17.3, y: 61.6, zIndex: 35 },
-      { id: 'srv-cabinet', type: 'network-cabinet', sprite: 'network-cabinet', x: 12.2, y: 65.5, zIndex: 40 },
-      { id: 'srv-cart', type: 'crash-cart', sprite: 'crash-cart', x: 79.8, y: 66.2, zIndex: 45 },
+      { id: 'srv-cabinet', type: 'network-cabinet', sprite: 'network-cabinet', x: 12.2, y: 65.5, zIndex: 40, interactive: true, label: 'Core switch: click to reboot' },
+      { id: 'srv-cable-2', type: 'hotspot', sprite: '', x: 37.6, y: 41.2, label: 'Yellow cables: click to re-seat' },
+      { id: 'srv-cable-5', type: 'hotspot', sprite: '', x: 23.1, y: 51.6, label: 'Yellow cables: click to re-seat' },
+      { id: 'srv-cart', type: 'crash-cart', sprite: 'crash-cart', x: 79.8, y: 66.2, zIndex: 45, interactive: true, label: 'Crash cart: click to run diagnostics' },
     ],
     connections: [
       { toRoom: 'corridor', position: { x: 68.5, y: 53 }, label: 'Corridor', exitFacing: 'rear-right', entryFacing: 'front-left', door: { x: 64.6, y: 24, w: 9.4, h: 29.6 } },
@@ -598,7 +606,7 @@ export function getFreeSpot(
     : room.agentSpots
 
   for (const spot of spots) {
-    if (!occupiedSpotIds.has(spot.id)) return spot
+    if (!occupiedSpotIds.has(spot.id) && !spot.bossOnly) return spot
   }
   return null
 }

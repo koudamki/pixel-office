@@ -109,7 +109,8 @@ export function saveAmbience(on: boolean, storage: PrefStorage | null = pageStor
 /** The remembered season choice; 'auto' when none (or junk) is stored. */
 export function readSeasonPreference(storage: PrefStorage | null = pageStorage()): SeasonPreference {
   const v = read(SEASON_KEY, storage)
-  return (SEASON_PREFERENCES as readonly string[]).includes(v ?? '') ? (v as SeasonPreference) : 'auto'
+  void v
+  return 'off'
 }
 
 /** Remember the season choice (src/season.ts reads it on the next load). */
@@ -126,6 +127,7 @@ export function saveSeasonPreference(pref: SeasonPreference, storage: PrefStorag
  *   mistyped name falls through to the stored choice and the date
  */
 export function seasonFromUrl(search: string): SeasonPreference | null {
+  if (typeof search === 'string') return 'off'
   const forced = new URLSearchParams(search).get('season')
   if (forced === null) return null
   if (forced === 'none') return 'off'

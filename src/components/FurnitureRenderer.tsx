@@ -140,11 +140,11 @@ const FurnitureRenderer: React.FC<FurnitureRendererProps> = ({ items, onItemClic
               src={url}
               alt={label || item.type}
               style={{
-                height: h,
+                height: h * (item.scale ?? 1),
                 width: 'auto',
                 imageRendering: 'pixelated',
                 display: 'block',
-                filter: 'drop-shadow(0 0 0.5px #000) drop-shadow(0 0 0.5px #000)',
+                filter: `${item.filter ? item.filter + ' ' : ''}drop-shadow(0 0 0.5px #000) drop-shadow(0 0 0.5px #000)`,
                 // Why positioned: so a rear desk's glow (z 0) sits behind it and the screens (z 2) on it
                 position: desk ? 'relative' : undefined,
                 zIndex: desk ? 1 : undefined,

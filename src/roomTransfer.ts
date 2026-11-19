@@ -117,7 +117,7 @@ export const BOSS_STEP_IN = 0.25
  * table's end; to the right of the door, in front of the TV, the floor is clear.
  */
 const STAND_SPOTS: Partial<Record<RoomId, Position>> = {
-  'meeting-room': { x: 73.5, y: 57.5 },
+  'meeting-room': { x: 32.2, y: 73.8 }, // the boss's own chair at the head of the table
 }
 
 /**
@@ -380,6 +380,9 @@ export function planRoomMoves(
   let changed = false
   let nextMeta = meta
   let taken: Set<string> | null = null
+  let standers = 0
+  // While the boss is in the meeting room, everybody who can leave their desk comes to him
+  const gather = open.has(MEETING_ROOM) && agents.some(b => b.id.startsWith('boss-') && roomOf(b) === MEETING_ROOM)
   const next = agents.map(agent => {
     const m = nextMeta[agent.id]
     // Why sentTo: the person sent the boss out (he follows the stage); the rules would only walk him home
@@ -397,7 +400,7 @@ export function planRoomMoves(
       sessionNeedsYou: key !== null && needsYou.has(key),
       idleForMs: agent.state === 'idle' && m.idleSince !== null ? env.now - m.idleSince : null,
     }
-    const wish = wantedRoom(facts, open)
+    const wish = gather && !facts.pinned ? { room: MEETING_ROOM, reason: 'needs-you' as const } : wantedRoom(facts, open)
 
     if (wish.room === current) {
       if (m.wish) { nextMeta = { ...nextMeta, [agent.id]: { ...m, wish: undefined } }; changed = true }
@@ -417,9 +420,14 @@ export function planRoomMoves(
     } else {
       taken ??= heldSpotIds(agents)
       const seat = visitSeat(wish.room, taken)
-      if (!seat) return agent // full: stay put, ask again next frame
-      taken.add(seat.id)
-      moving = beginTransfer({ ...agent, visitSpotId: seat.id }, wish.room, { x: seat.x, y: seat.y }, 'visit', env)
+      if (seat) {
+        taken.add(seat.id)
+        moving = beginTransfer({ ...agent, visitSpotId: seat.id }, wish.room, { x: seat.x, y: seat.y }, 'visit', env)
+      } else if (gather && wish.room === MEETING_ROOM) {
+        // No chair left: stand along the wall by the door
+        const n = standers++
+        moving = beginTransfer({ ...agent, visitSpotId: undefined }, wish.room, { x: 71 + (n % 4) * 3.2, y: 58.5 + Math.floor(n / 4) * 3 + (n % 4) * 1.4 }, 'visit', env)
+      } else return agent // full: stay put, ask again next frame
     }
     nextMeta = { ...nextMeta, [agent.id]: { ...nextMeta[agent.id], wish: undefined, transfer: moving.transfer, arrivedAtDeskAt: null } }
     changed = true

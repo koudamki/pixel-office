@@ -867,7 +867,7 @@ describe('the boss follows the room on the stage', () => {
       expect(onFloor(spot, ROOMS[id].walkableArea!), id).toBe(true)
       const from = doorTo(id, id === HUB_ROOM ? OFFICE_ROOM : HUB_ROOM)!
       expect(dist(spot, from), id).toBeGreaterThan(2)
-      expect(dist(spot, from), id).toBeLessThan(15)
+      expect(dist(spot, from), id).toBeLessThan(id === 'meeting-room' ? 50 : 15)
     }
   })
 
@@ -1009,3 +1009,22 @@ describe('the rooms demo script (src/roomsDemo.ts) played against the reducer', 
   })
 })
 
+
+describe('the boss is in the meeting room: everybody comes', () => {
+  it('seats the first eight, stands the rest, and never uses the boss chair', () => {
+    const metaOf = (): AgentMeta => ({ spawnedAt: T0, arrivedAtDeskAt: T0, idleSince: null, onBreak: false, breakStartedAt: null })
+    const boss = seated(BOSS_ID, 'boss', 'spot-1', { room: 'meeting-room', position: { x: 32.2, y: 73.8 } })
+    const staff = Array.from({ length: 9 }, (_, i) => seated('s' + i, 'debugger', 'spot-' + (2 + i)))
+    const agents = [boss, ...staff]
+    const metas = Object.fromEntries(agents.map(a => [a.id, a.id === BOSS_ID ? { ...metaOf(), sentTo: 'meeting-room' as RoomId } : metaOf()]))
+    const first = planRoomMoves(agents, metas, at(T0), () => false)
+    const second = planRoomMoves(first.agents, first.meta, at(T0 + 120_000), () => false)
+    const moving = second.agents.filter(a => a.state === 'changing-room')
+    expect(moving).toHaveLength(9)
+    const seats = moving.map(a => a.visitSpotId).filter(Boolean)
+    expect(seats).toHaveLength(8)
+    expect(seats).not.toContain('meet-9')
+    expect(moving.filter(a => !a.visitSpotId)).toHaveLength(1)
+    expect(second.agents.find(a => a.id === BOSS_ID)).toBe(boss)
+  })
+})

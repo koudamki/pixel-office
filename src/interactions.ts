@@ -36,6 +36,15 @@ function pick(arr: string[]): string {
  */
 export function getInteraction(furnitureId: string, board: TaskBoardInfo | null = getShownBoard()): Interaction | null {
   switch (furnitureId) {
+    // Server room: the boss walks over and fixes it; the line shows as his speech bubble
+    case 'srv-cable-2':
+      return { walkTo: { x: 45.0, y: 50.9 }, effect: '/sprites/effects/typing.png', duration: 3500, chatMessage: ['Re-seating the yellow cable...', 'Link restored, the rack is green again', 'Swapped a worn patch lead'], cooldown: 8000 }
+    case 'srv-cable-5':
+      return { walkTo: { x: 30.4, y: 61.0 }, effect: '/sprites/effects/typing.png', duration: 3500, chatMessage: ['Tracing the yellow cable...', 'Reseated it, packet loss gone', 'Cable tied and labelled'], cooldown: 8000 }
+    case 'srv-cabinet':
+      return { walkTo: { x: 27.4, y: 71.8 }, effect: '/sprites/effects/typing.png', duration: 3500, chatMessage: ['Rebooting the core switch...', 'Switch is back, all ports up'], cooldown: 10000 }
+    case 'srv-cart':
+      return { walkTo: { x: 74.5, y: 68.0 }, effect: '/sprites/effects/typing.png', duration: 3500, chatMessage: ['Running diagnostics from the crash cart...', 'All six racks healthy'], cooldown: 10000 }
     // Plants — water them
     case 'plant-1':
       return { walkTo: { x: 90, y: 65 }, effect: '/sprites/effects/watering-can.png', duration: 3000, chatMessage: list('chatter.interactions.plant1'), cooldown: 30000 }
