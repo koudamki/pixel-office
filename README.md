@@ -1,1 +1,431 @@
+# Claude Office
 
+[![npm](https://img.shields.io/npm/v/@w17ant/agent-office)](https://www.npmjs.com/package/@w17ant/agent-office) [![npm downloads](https://img.shields.io/npm/dm/@w17ant/agent-office)](https://www.npmjs.com/package/@w17ant/agent-office) [![Latest release](https://img.shields.io/github/v/release/W17ant/Claude-Office)](https://github.com/W17ant/Claude-Office/releases/latest) [![GitHub stars](https://img.shields.io/github/stars/W17ant/Claude-Office?style=social)](https://github.com/W17ant/Claude-Office)
+
+A pixel art virtual office that visualizes your AI agents working in real-time. Watch Claude Code agents spawn, sit at desks, take coffee breaks, and chat in a Slack-inspired office chat panel — all rendered in an isometric pixel art office.
+
+## Update — rooms, seasons and a quieter office
+
+**What's new**
+- **Four more rooms** — a corridor, a meeting room, a server room and a lunch room. Click a door in the picture (or the floor plan in the corner) and the stage goes there; your boss walks over through the corridor
+- **The office follows the calendar** — spring, summer, autumn and winter all year round, with Christmas, Halloween, Easter and Valentine's Day on top: decorated rooms, desks and plants in both themes
+- **Halloween costumes** — Claude is a vampire and the boss a wizard; in Dunder Mifflin mode Michael, Dwight, Jim and Pam dress up and everyone else wears a mask or a witch hat
+- **The boss shouts the prompt** from where he stands instead of walking it over; the Claude it's for gets a "!"
+- **Prompts from the chat** — type `@agent-office fix the failing test` in the office chat and that session picks it up when its turn ends
+- **A quieter soundtrack** — a soft ambient office instead of bleeps, with gentle cues for a prompt sent, a reply in and Claude needing you (turn the ambience off in Settings)
+- **Your phone** — `npm run lan` prints a QR code; taps on the phone (water a plant, ring the bell) play on the desktop too
+- The full list is in the [CHANGELOG](CHANGELOG.md)
+
+### Click a door — the boss follows you
+![Clicking the office door shows the corridor, then the meeting room door; the boss walks through the corridor and arrives in the meeting room](docs/images/rooms.gif)
+
+![The corridor with its five doors, the meeting room, the server room with its racks, and the lunch room](docs/images/rooms.png)
+
+### Every season
+![The office at Christmas, Halloween, Easter, Valentine's Day, and in spring, summer, autumn and winter](docs/images/seasons.png)
+
+### Halloween in Dunder Mifflin mode
+![The Scranton office decorated for Halloween, staff walking about in masks and a witch hat](docs/images/halloween-dunder-mifflin.gif)
+
+### Click the furniture
+![Clicking the coffee machine: the boss walks over and comes away with a coffee](docs/images/coffee-errand.gif)
+
+## Update — 1.1: the level-up
+
+> We had 12 hours and 90 % of our 20x plan still to use 😂 so I asked Claude to level up Claude Office (using Fable 5.1 <img src="docs/images/claude-crab.gif" height="36" alt="" align="absmiddle"> and <img src="docs/images/ultracode.svg" height="20" alt="ultracode" align="absmiddle">).
+
+**What's new**
+- **A Claude for every terminal** — each Claude Code session gets its own pill, model badge and Claude at a desk
+- **Claude acts out the turn** — the boss shouts your prompt across the office, Claude types, naps when it's done
+- **✋ Needs you** — a permission prompt raises Claude's hand with a chime, and you can click **Allow** right in the office
+- **Click anyone** — an inspector card shows what they're doing, every tool they've called and what they've said
+- **Prod Is Down** — a failed deploy turns the office red; a 🚀 for deploys, a 🎉 for pushes to main, ❌ for failing tests
+- **The whiteboard is real** — it shows Claude's actual task list
+- **Payroll, electricity and memory meters** — cost, tokens per minute and context fill per session
+- **Desktop app** with a tray badge and a mini widget, installers for Mac, Windows and Linux
+- Plus three bug hunts, a security pass and 972 tests — the full list is in the [CHANGELOG](CHANGELOG.md)
+
+### Claude's turn, start to nap
+![The boss shouts the prompt from his desk, Claude gets a '!' and starts typing, a worker comes in to help and leaves, then Claude replies](docs/images/claudes-turn.gif)
+
+### Click a character
+![Inspector card: the task, tools used with a failed call in red, tokens and model, and the end of the agent's own transcript](docs/images/inspector.png)
+
+### ✋ Needs you — answer it from the office
+![Claude's hand is up, the session pill is amber, and a card asks to run git push origin main with Allow, Allow & remember and Deny](docs/images/permission-card.png)
+
+### Prod Is Down — and back again
+![A deploy fails and the office turns red with a spinning beacon and an incident timer, then the fix lands and the lights come back with a postmortem](docs/images/prod-is-down.gif)
+
+### The whiteboard is your real task list
+![Post-its land in To do, move through In progress to Done, with a red pin on a blocked task](docs/images/task-board.gif)
+
+### Payroll, electricity and memory
+![Office meters: cost, tokens per minute and context fill per session, with the 5h rate-limit pill](docs/images/meters.png)
+
+## Update — Dunder Mifflin mode
+
+Type `/the-office` in the Slack chat panel to flip the whole office into a Scranton-branch tribute. The room, the cast, and the chatter all swap over — Michael Scott runs the place, Jim is your assistant, and Dwight guards the beet cellar. (Fan art — see [NOTICE.md](NOTICE.md).)
+
+### Pretzel day, every day
+<p>
+  <img src="docs/images/dunder-mifflin-day.png" alt="Dunder Mifflin — Day" width="48%">
+  <img src="docs/images/dunder-mifflin-night.png" alt="Dunder Mifflin — Night" width="48%">
+</p>
+
+**What changes when you toggle it on**
+- 27 cast members (Michael, Jim, Pam, Dwight, Kevin, Angela, Stanley, Creed, David Wallace, Bob Vance — the whole office) dealt to agent roles
+- Role chatter swaps to in-character lines (`"Bears. Beets. Battlestar Galactica."`, `"selling paper"`, `"Schrute bucks awarded"`)
+- Michael occasionally lands his signature `"That's what she said 😏"` when replying to finished work
+- Character prop overlays — Michael rotates World's Best Boss mug / Dundie / Golden Ticket / Prison Mike bandana / "NO GOD PLEASE NO", Dwight gets the CPR dummy mask or a Schrute Buck, Jim keeps his jello stapler, Stanley gets a pretzel, Jan gets a Serenity by Jan candle, Oscar / Pam / Toby share the Finer Things Club
+- Angela gets a follower cat *and* a head-cat (randomized from 12 cat sprites)
+- Kevin's chili, pretzel day, and Finer Things Club references sprinkled through the break-room chatter
+
+### The cast
+<p align="center">
+  <img src="docs/images/michael-scott.png" alt="Michael Scott" height="140">
+  <img src="docs/images/jim-halpert.png" alt="Jim Halpert" height="140">
+  <img src="docs/images/pam-beesly.png" alt="Pam Beesly" height="140">
+  <img src="docs/images/dwight-schrute.png" alt="Dwight Schrute" height="140">
+  <img src="docs/images/angela-martin.png" alt="Angela Martin" height="140">
+  <img src="docs/images/kevin-malone.png" alt="Kevin Malone" height="140">
+  <img src="docs/images/stanley-hudson.png" alt="Stanley Hudson" height="140">
+  <img src="docs/images/andy-bernard.png" alt="Andy Bernard" height="140">
+  <img src="docs/images/kelly-kapoor.png" alt="Kelly Kapoor" height="140">
+  <img src="docs/images/ryan-howard.png" alt="Ryan Howard" height="140">
+  <img src="docs/images/creed-bratton.png" alt="Creed Bratton" height="140">
+  <img src="docs/images/robert-california.png" alt="Robert California" height="140">
+  <img src="docs/images/david-wallace.png" alt="David Wallace" height="140">
+  <img src="docs/images/bob-vance.png" alt="Bob Vance, Vance Refrigeration" height="140">
+</p>
+
+### Easter-egg props
+Each cast member gets a signature prop floating above their desk in place of the usual coffee/energy-drink bubble.
+
+<p align="center">
+  <img src="docs/images/prop-worlds-best-boss.png" alt="World's Best Boss mug (Michael)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-dundie.png" alt="Dundie Award (Michael)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-golden-ticket.png" alt="Golden Ticket (Michael)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-prison-mike.png" alt="Prison Mike bandana (Michael)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-no-god.png" alt="NO GOD PLEASE NO (Michael)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-cpr-mask.png" alt="CPR Dummy Mask (Dwight)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-schrute-buck.png" alt="Schrute Buck (Dwight)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-jello-stapler.png" alt="Jello Stapler (Jim)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-pretzel.png" alt="Pretzel Day (Stanley)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-serenity-candle.png" alt="Serenity by Jan (Jan)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-finer-things.png" alt="Finer Things Club (Oscar / Pam / Toby)" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-paper-box.png" alt="Dunder Mifflin Paper Box" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-dunder-logo.png" alt="Dunder Mifflin Logo" height="70">
+  &nbsp;&nbsp;
+  <img src="docs/images/prop-angela-cat.png" alt="Angela's cat" height="70">
+</p>
+
+Toggle it off any time with `/the-office` again — state persists in `localStorage`.
+
+---
+
+### Full office — agents working, chatting, and taking coffee breaks
+![Day Mode](docs/images/Day-Mode.png)
+
+## Features
+
+**Live Agent Visualization**
+- Agents appear as pixel art characters that walk into the office through the door
+- Each agent type gets a unique character sprite and desk assignment
+- Agents show typing bubbles, take coffee/water breaks, and leave when done
+- One pill per Claude Code session, each with its own Claude at a desk
+- Boss character (you) with an energy drink, Claude with coffee
+- Random office events: pizza deliveries, fire drills, power flickers, printer jams
+- In your language: English, Español, Português (Brasil), Français, Deutsch, Italiano, 日本語, 한국어, 简体中文, 繁體中文, Bahasa Indonesia, Русский and Türkçe (Settings › Language). Every language but English is a draft, marked *work in progress*: fixes welcome, see [CONTRIBUTING › Add or fix a language](CONTRIBUTING.md#add-or-fix-a-language)
+- Day/night cycle with smooth transitions
+- Seasons: the office follows the calendar, spring, summer, autumn and winter all year round with Christmas, Halloween, Easter and Valentine's Day on top, every one drawn in both themes — see [Seasons](docs/reference.md#seasons)
+- **Settings** (the ⚙ in the title bar): theme, day/night, season, sound and the server settings in one panel — see [Settings](docs/reference.md#settings-panel)
+- **Today** (bottom-right of the status strip): the day's sessions, agents, tasks, deploys, failures, incidents and payroll, kept across restarts — or `/recap` in the chat
+- **More rooms**: a corridor, a meeting room, a server room and a lunch room; click a door or the floor plan to go there and the boss follows — see [Rooms](docs/reference.md#rooms)
+
+**AI-Powered Office Chat**
+- Back-and-forth conversation with Claude through the office chat panel
+- Claude has a witty office manager personality with running jokes
+- Multi-agent routing — mention a bug and the Debugger responds, ask about UI and Frontend answers
+- Typing indicators, emoji reactions, read receipts
+- Slash commands: `/status`, `/agents`, `/recap`, `/incident`, `/all-clear`, `/help`
+- Chat history persists across restarts (SQLite)
+- Proactive messages — agents announce when they start and finish work
+- Desktop notifications for important events
+
+**Context-Aware AI**
+- Claude knows your current git branch and active agents
+- Conversation memory — remembers the last 10 messages
+- AI On/Off toggle to control token usage
+
+### Night mode — the office after dark, agents still grinding
+![Night Mode](docs/images/night-mode.png)
+
+### Waiting for tokens... the office keeps itself entertained
+![Waiting for tokens](docs/images/entertainment-waiting-tokenreset.png)
+
+## How It Works
+
+Claude Code hooks and its status line send every agent spawn, tool call, prompt and permission wait to a local Express + WebSocket server, which broadcasts them to the React frontend.
+
+```
+Claude Code ──hooks + status line──> Express Server ──WebSocket──> React Frontend
+                                          │
+                                    SQLite (chat)
+                                          │
+                                  Chat AI Watcher ──claude -p──> Reply
+```
+
+## Quick Start
+
+```bash
+# Clone
+git clone https://github.com/W17ant/Claude-Office.git
+cd Claude-Office
+
+# Install
+npm install
+
+# Connect Claude Code (adds the hooks + status line to ~/.claude/settings.json, safe to re-run)
+npm run install-hooks
+
+# Start everything (server + frontend + chat watcher) and open the office
+bash scripts/start-office.sh
+
+# Stop everything
+bash scripts/stop-office.sh
+```
+
+Now spawn agents in Claude Code and watch them appear in the office.
+
+**No checkout** (Node 22+):
+
+```bash
+npx @w17ant/agent-office install-hooks   # connect Claude Code (once)
+npx @w17ant/agent-office                 # start the office and open it; Ctrl+C stops it
+```
+
+`doctor`, `stop`, `uninstall-hooks` and `--detach` work the same way; see [Run it with npx](docs/reference.md#run-it-with-npx).
+
+- **Rather have an app?** Grab the installer for Mac, Windows or Linux from [Releases](https://github.com/W17ant/Claude-Office/releases).
+- **Nothing showing up?** `npm run doctor` checks the whole setup and tells you what's missing.
+- **Want it gone?** `npm run uninstall-hooks` takes the hooks back out.
+- Works on macOS and Linux, and on Windows through WSL or Git Bash.
+
+Installing it as a Claude Code plugin, the hook events, every setting and the security model are all in the [reference](docs/reference.md).
+
+## Other AI tools
+
+The office can show sessions from other AI coding tools too, tagged with the tool's name on the session strip. Connect one with `--tool`:
+
+| Tool | Connect it | Status |
+|---|---|---|
+| Codex | `npm run install-hooks -- --tool codex`, then type `/hooks` in Codex once to approve it | experimental — tell us if it works ([#115](https://github.com/W17ant/Claude-Office/issues/115)) |
+| Gemini CLI | `npm run install-hooks -- --tool gemini` | experimental — tell us if it works ([#115](https://github.com/W17ant/Claude-Office/issues/115)) |
+| OpenCode | `npm run install-hooks -- --tool opencode` | experimental — tell us if it works ([#115](https://github.com/W17ant/Claude-Office/issues/115)) |
+| Antigravity | `npm run install-hooks -- --tool antigravity` | experimental — tell us if it works ([#115](https://github.com/W17ant/Claude-Office/issues/115)) |
+| Kimi | `npm run install-hooks -- --tool kimi` | experimental — tell us if it works ([#115](https://github.com/W17ant/Claude-Office/issues/115)) |
+
+With npx it is `npx @w17ant/agent-office install-hooks --tool <id>`. `uninstall-hooks --tool <id>` takes out only what it added. Nothing leaves your machine: the hook only talks to the office on `127.0.0.1`. How it works, and how to add a tool: [reference › Other AI tools](docs/reference.md#other-ai-tools).
+
+## Customise Your Character
+
+The boss character (you) is configurable via `office.config.json`:
+
+```json
+{
+  "boss": {
+    "name": "YourName",
+    "sprite": "MyChar-1",
+    "color": "#ff4444",
+    "emoji": "crown"
+  }
+}
+```
+
+Change it and reload the page — no rebuild needed.
+
+### Creating a custom sprite
+
+Use the Helper sprite sheet as a reference for the 4-direction layout — here's an example of mine next to it:
+
+<p>
+  <img src="docs/images/Helper.png" alt="Helper Sprite Template" height="250">
+  <img src="docs/images/Me-1-front-right.png" alt="Custom Boss — Front Right" height="250">
+  <img src="docs/images/Me-1-rear-left.png" alt="Custom Boss — Rear Left" height="250">
+</p>
+
+Here's Mini Claude — I asked Claude to describe itself after showing it the office with my avatar, then used the prompt to generate the sprite:
+
+<img src="docs/images/mini-claude.png" alt="Mini Claude" height="500">
+
+1. Open ChatGPT (with DALL-E image generation)
+2. Upload `public/sprites/characters/Helper.png` as a reference
+3. Ask it to generate a pixel art character in the same style and layout (4 directions: front-left, rear-right, front-right, rear-left)
+4. Save the output and extract the sprites:
+
+```bash
+python3 scripts/extract-boss-sprite.py your-character.png MyChar-1
+```
+
+#### Make it walk
+
+The cast walk with a four-frame cycle (left foot down, passing, right foot down, passing) instead of gliding. A custom sprite glides until it has one; one more ChatGPT image gives it the whole cycle. Walking uses three directions, so the image is a 3 × 4 grid: a row per direction, a column per step.
+
+1. Make the image to upload: the three standing poses side by side on magenta. The script also prints the prompt to use:
+
+   ```bash
+   python3 scripts/walk-cycle.py prepare MyChar-1
+   ```
+
+2. In ChatGPT, upload `MyChar-1-walk-input.png` with that prompt and save the sheet it draws. Check it before cutting: 3 rows of 4, every figure facing the same way as its standing pose, the bottom row showing the back of the head (not the face), and the same clothes in every frame. If one is off, ask again; a new image costs nothing on a ChatGPT plan.
+3. Cut it into the 12 frames (`MyChar-1-front-left-walk1.webp` … `MyChar-1-rear-left-walk4.webp`, beside the sprites):
+
+   ```bash
+   python3 scripts/walk-cycle.py cut your-walk-sheet.png MyChar-1
+   ```
+
+Reload the office and your character walks. The script places each frame on the standing sprite's canvas with its feet where the standing pose's feet are, and mirrors a row ChatGPT drew facing the wrong way. Add `--no-mirror` if the outfit has words on it, so they never read backwards. It needs Pillow and numpy (`pip3 install Pillow numpy`).
+
+For the Christmas look, do the same with `--festive` on both commands once your `-xmas.webp` copies exist (see [Christmas](docs/reference.md#christmas)). Your character then keeps its festive outfit mid-step. Any other season's outfit works the same way with `--season NAME` (`--season autumn` reads the `-autumn.webp` copies; `--festive` is short for `--season christmas`), see [Seasons](docs/reference.md#seasons).
+
+<details>
+<summary>The walk-cycle prompt</summary>
+
+> This is a pixel-art game character standing in 3 directions (left figure, middle figure, right figure). Make a 4-frame looping WALK CYCLE sprite sheet of the SAME character: 3 ROWS and 4 COLUMNS. Row 1 = the left figure's direction, row 2 = the middle figure's direction, row 3 = the right figure's direction. The 4 columns are the 4 phases of the walk, left to right: 1 = contact: left foot forward with its heel on the ground, right foot back, right arm swung forward; 2 = passing: legs together under the body, right foot lifted a little as it passes, arms by the sides; 3 = contact: right foot forward, left foot back, left arm swung forward; 4 = passing: legs together, left foot lifted a little, arms by the sides. Small natural steps, feet never wider apart than the shoulders. In every frame the head and torso face EXACTLY the same angle as that row's standing figure: do not turn the head, do not turn the body sideways, only the legs and arms move. Same size and proportions as the standing figures, same clothes, face, hair, accessories and shoes, same pixel-art style, outline and shading. Row 3 walks AWAY from the viewer like the right standing figure: in all 4 frames of row 3 we see the back of the head and the back, never the face. All 12 figures the same height, feet on one baseline per row. Leave clear magenta gaps between all 12 figures. Flat solid magenta (#FF00FF) background everywhere, no shadows, no grid lines, no labels, no added text.
+
+</details>
+
+## Chat
+
+| Command | Description |
+|---------|-------------|
+| `/status` | Office stats — agents, clients |
+| `/agents` | List active agents |
+| `/recap` | Today so far, as the office manager tells it — sessions, agents, tasks, deploys, failures, incidents, payroll |
+| `/incident` | Declare an incident by hand |
+| `/all-clear` | End the incident and post the postmortem |
+| `/help` | Show available commands |
+| `/the-office` | Toggle Dunder Mifflin mode |
+
+To wipe the chat history, run `python3 scripts/chat-post.py /clear` from the checkout.
+
+### Agent Routing
+
+The chat AI routes your messages to specialist agents based on keywords:
+
+| Topic | Agent |
+|-------|-------|
+| bugs, errors, crashes | Debugger |
+| PRs, code review, git | Reviewer |
+| UI, CSS, design | Frontend |
+| tests, coverage, e2e | Tester |
+| auth, security, tokens | Security |
+| deploys, Docker, CI | DevOps |
+| performance, caching | PerfEng |
+| databases, SQL | DBA |
+| TypeScript, types | TS Pro |
+| AI, LLMs, prompts | AI Eng |
+| APIs, REST, webhooks | Fullstack |
+| architecture, patterns | Architect |
+
+Agents can also message each other directly — see [Agent-to-agent messages](docs/reference.md#agent-to-agent-messages).
+
+### Just me and Claude — chatting in the office
+![Me & Claude](docs/images/Me%20&%20Claude.png)
+
+## Modes
+
+| URL | Mode |
+|-----|------|
+| `127.0.0.1:3333` | Live — connected to Claude Code via WebSocket |
+| `127.0.0.1:3333?sim` | Simulation — scripted demo with fake agents |
+| `127.0.0.1:3333?video` | Video — scripted recording mode |
+| `127.0.0.1:3333?helper` | Placement helper — dev tool for positioning furniture |
+| `127.0.0.1:3333?sim&rooms=all` | Rooms preview — the corridor, meeting room, server room and lunch room on placeholders, before their art ([Rooms](docs/reference.md#rooms)) |
+| `127.0.0.1:3333?variant=incident` | Incident — pins "Prod Is Down" on |
+| `http://<lan ip>:3335/#viewer=…` | Phone, watch-only — `npm run lan` prints this link and a QR code: the office scene alone, on a phone on your Wi-Fi ([Phone mode](docs/reference.md#phone-mode)) |
+| `https://<lan ip>:3335/#phone=…` | Phone, full office — `npm run lan -- --full` prints this link, a QR code and a certificate fingerprint to compare on the first visit: chat, permission cards you can answer, meters, settings and the inspector, over HTTPS only ([Phone mode](docs/reference.md#phone-mode)) |
+| `127.0.0.1:3333?season=christmas` | Christmas — the festive office any day (on by itself 1 Dec – 6 Jan) |
+| `127.0.0.1:3333?season=autumn` | Any season or holiday by name, any day: `spring`, `summer`, `autumn`, `winter`, `halloween`, `easter`, `valentine` ([Seasons](docs/reference.md#seasons)) |
+| `127.0.0.1:3333?season=none` | No seasonal art, whatever the date |
+
+The theme, day/night mode, season and sound are also in **Settings** (the ⚙ at the right of the title bar) and are remembered per browser; a `?theme=` or `?season=` in the address still wins over what is stored there.
+
+## Tech Stack
+
+- **Frontend**: React + TypeScript + Vite
+- **Server**: Express + WebSocket (ws)
+- **Storage**: SQLite (better-sqlite3)
+- **Chat AI**: Claude CLI (`claude -p`)
+- **Sprites**: Custom pixel art (isometric)
+- **Desktop**: Electron (optional)
+- **Tests**: Vitest, run in CI on every pull request
+
+## Project Structure
+
+```
+Claude-Office/
+├── src/                    # React frontend
+│   ├── components/         # Character, SlackChat, AgentCard, TaskBoard…
+│   ├── officeReducer.ts    # Every office event → what the office does
+│   ├── styles/             # office.css, incident.css…
+│   └── App.tsx             # Main app
+├── server/                 # Express + WebSocket server
+│   ├── index.js            # HTTP endpoints + WS broadcast
+│   └── chat-db.js          # SQLite wrapper
+├── hooks/                  # Claude Code hooks
+│   ├── agent-tracker.sh    # Forwards events to the server
+│   ├── agent-tracker.py    # Turns a hook payload into the office event
+│   ├── status-line.sh      # Feeds the meters
+│   └── install-hooks.sh    # npm run install-hooks
+├── scripts/                # start / stop / doctor / chat watcher
+├── electron/               # Desktop app
+├── public/sprites/         # Pixel art characters + effects
+└── docs/                   # Reference + images
+```
+
+## Security
+
+- Server binds to `127.0.0.1` only — not exposed to the network. Phone mode is opt-in: `npm run lan` adds a separate watch-only listener on your LAN address (no API routes, its own viewer key, no prompts, commands, paths or task text); `npm run lan -- --full` serves the full office there instead, over HTTPS only, with a certificate made on this machine (compare its printed fingerprint on the first visit: nobody signed it), its own phone secret and a short allowlist of routes; and `AGENT_OFFICE_ALLOWED_HOSTS` lets `tailscale serve` reach the loopback server ([Phone mode](docs/reference.md#phone-mode))
+- Agent events, permission answers and wiping the chat need the auth token in `~/.agent-office/auth-token` (`0600` permissions); typing in the chat doesn't
+- The office page gets the token from the link the start script opens; without it the office is read-only
+- Hook requests are signed, so the token never appears on a command line
+
+The full model is in the [reference](docs/reference.md#security).
+
+## Desktop App (Electron)
+
+Download it from [Releases](https://github.com/W17ant/Claude-Office/releases), or build it yourself:
+
+```bash
+npm run dev:electron    # Development
+npm run build:electron  # Build the installer
+```
+
+The app keeps itself up to date: when a newer release is out it downloads it in the background, and the tray menu (also on right-click in the window) offers **Restart to update**. Untick **Update automatically** in the same menu and it only tells you a new version is there, with a link to the download. How it works on each platform, and when it falls back to the download link, is in the [reference](docs/reference.md#desktop-app-electron).
+
+## Community
+
+- **Got an idea?** Suggest it, or vote on others, in [Discussions › Ideas](https://github.com/W17ant/Claude-Office/discussions/categories/ideas)
+- **Made the office your own?** Show it in [Show and tell](https://github.com/W17ant/Claude-Office/discussions/categories/show-and-tell)
+- **Built something in a fork?** Bring it back and get credited in the changelog: [CONTRIBUTING › Got something in your fork?](CONTRIBUTING.md#got-something-in-your-fork)
+- **Want to help?** Issues labelled [help wanted](https://github.com/W17ant/Claude-Office/labels/help%20wanted) are open for anyone
+
+Bug reports and pull requests are welcome too; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+MIT — the Dunder Mifflin fan art is excluded, see [NOTICE.md](NOTICE.md).

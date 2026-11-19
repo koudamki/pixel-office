@@ -1,0 +1,134 @@
+/**
+ * IncidentLayer — everything incident mode draws over the room.
+ *
+ * Rendered as siblings inside .room-container (a fragment, not a wrapper)
+ * so each piece keeps its own z-index against furniture and agents:
+ *   - the "days since last incident" sign (every mode; number is live)
+ *   - a red room tint that pulses (incident only), after a short dark red
+ *     alarm burst as the incident starts
+ *   - a beacon above the door with a sweeping light cone (incident only)
+ *   - the status screen on the wall TV (incident only)
+ *   - optional slots that draw nothing until their art exists
+ *     (incident board, pizza tower)
+ *
+ * All positions are % of the room, matching the hotspots in rooms.ts and
+ * the fixtures baked into the room PNGs.
+ */
+
+import React, { useEffect, useSyncExternalStore } from 'react'
+import { useIncident, daysSinceLastIncident, shouldPlayAlarm } from '../incident'
+import {
+  INCIDENT_ASSETS, incidentAssetUrl, probeIncidentAssets, subscribeIncidentAssets, type IncidentAssetName,
+} from '../incidentAssets'
+import { useT } from '../i18n'
+
+/** Live asset URL for a slot (re-renders when a probe confirms the real art). */
+function useIncidentAsset(name: IncidentAssetName): string | null {
+  return useSyncExternalStore(subscribeIncidentAssets, () => incidentAssetUrl(name), () => incidentAssetUrl(name))
+}
+
+// Where the fixtures sit in the room art (% of the room)
+const DOOR_BEACON = { x: 69, y: 21 }      // wall above the door frame
+const TV_SCREEN   = { x: 90.5, y: 36.5 }  // the wall TV (hotspot 'tv-monitor' is just below)
+const DAYS_SIGN   = { x: 6.6, y: 30.5 }   // the small sign baked into the left wall
+
+// Why these numbers: the incident board PNG (606x686) is laid over the wall
+// board so its writing surface lands on BOARD_RECT (src/taskBoard.ts: left
+// 74.85 %, top 26.1 %, 10.6 % wide, skewed 23.1 deg). In the PNG the surface
+// spans x 38-552 (514 px) with its top-left corner at (38, 66), so the image is
+// 10.6 * 606 / 514 = 12.5 % of the room wide, its left edge 38/606 of that
+// (0.78 %) before the surface, its top 66/686 of its height (1.82 % of the
+// room) above it. The drawing's board leans 19.6 deg, not the wall's 23.1, so
+// the extra 3.5 deg is added as a skew around the surface's top-left corner.
+const INCIDENT_BOARD = { left: 74.07, top: 24.28, width: 12.5, originX: 6.27, originY: 9.62, skewDeg: 3.5 }
+const COUNTER     = { x: 80, y: 54 }      // coffee counter, next to the machine
+
+const DaysSinceSign: React.FC<{ days: number; incident: boolean }> = ({ days, incident }) => {
+  const tr = useT()
+  const src = useIncidentAsset('daysSign')
+  if (!src) return null
+  const n = incident ? 0 : days
+  const size = n >= 100 ? ' three' : n >= 10 ? ' two' : ''
+  return (
+    <div
+      className={`days-sign${incident ? ' incident' : ''}`}
+      style={{ left: `${DAYS_SIGN.x}%`, top: `${DAYS_SIGN.y}%` }}
+      title={incident ? tr('ui.incident.daysSignNow') : tr('ui.incident.daysSignTitle', { days })}
+    >
+      <img src={src} alt={tr('ui.incident.daysSign')} draggable={false} />
+      <span className={`days-sign-digits${size}`}>{n}</span>
+    </div>
+  )
+}
+
+const IncidentLayer: React.FC = () => {
+  const tr = useT()
+  const incident = useIncident()
+  const active = incident.variant === 'incident'
+
+  const beacon = useIncidentAsset('beacon')
+  const beaconLit = useIncidentAsset('beaconLit')
+  const screen = useIncidentAsset('statusScreen')
+  const board = useIncidentAsset('incidentBoard')
+
+  // Pizza arrives in tiers as the incident drags on
+  const minutes = active && incident.startedAt ? (Date.now() - incident.startedAt) / 60_000 : 0
+  const pizzaSlot: IncidentAssetName = minutes < 10 ? 'pizzaTower0' : minutes < 30 ? 'pizzaTower1' : 'pizzaTower2'
+  const pizza = useIncidentAsset(pizzaSlot)
+
+  // Why: one probe per slot per page load — resolves the real art when it lands in public/
+  useEffect(() => { void probeIncidentAssets() }, [])
+
+  const days = daysSinceLastIncident()
+
+  return (
+    <>
+      <DaysSinceSign days={days} incident={active} />
+
+      {active && (
+        <>
+          {/* Red room tint — above everything incl. agents, below the boss effect */}
+          <div className="room-tint" aria-hidden="true" />
+          {/* Alarm burst: three slow dark red flashes as prod goes down (keyed so each incident gets its own) */}
+          {shouldPlayAlarm(incident, Date.now()) && (
+            <div key={incident.startedAt} className="room-alarm" aria-hidden="true" />
+          )}
+
+          {/* Beacon over the door: CSS light cone sweep + two alternating frames */}
+          <div className="incident-beacon-sweep" style={{ left: `${DOOR_BEACON.x}%`, top: `${DOOR_BEACON.y}%` }} aria-hidden="true" />
+          <div className="incident-beacon" style={{ left: `${DOOR_BEACON.x}%`, top: `${DOOR_BEACON.y}%` }} title={tr('ui.incident.beacon')}>
+            {beacon && <img className="frame-a" src={beacon} alt="" draggable={false} />}
+            {beaconLit && <img className="frame-b" src={beaconLit} alt="" draggable={false} />}
+          </div>
+
+          {/* Status page on the wall TV */}
+          {screen && (
+            <div className="incident-tv" style={{ left: `${TV_SCREEN.x}%`, top: `${TV_SCREEN.y}%` }} title={tr('ui.incident.statusPage')}>
+              <img src={screen} alt={tr('ui.incident.rollbackAlt')} draggable={false} />
+              {/* Why: the placeholder (the deploy screen) needs the word; the real status-screen art already says ROLLBACK */}
+              {screen !== INCIDENT_ASSETS.statusScreen.intended && <span className="incident-tv-label">{tr('ui.incident.rollback')}</span>}
+            </div>
+          )}
+
+          {/* Slots that stay empty until the real art is drawn */}
+          {board && (
+            <img className="incident-board" src={board} alt={tr('ui.incident.timeline')} draggable={false}
+              style={{
+                left: `${INCIDENT_BOARD.left}%`,
+                top: `${INCIDENT_BOARD.top}%`,
+                width: `${INCIDENT_BOARD.width}%`,
+                transformOrigin: `${INCIDENT_BOARD.originX}% ${INCIDENT_BOARD.originY}%`,
+                transform: `skewY(${INCIDENT_BOARD.skewDeg}deg)`,
+              }} />
+          )}
+          {pizza && (
+            <img className="incident-pizza" src={pizza} alt={tr('ui.incident.pizza')} draggable={false}
+              style={{ left: `${COUNTER.x}%`, top: `${COUNTER.y}%` }} />
+          )}
+        </>
+      )}
+    </>
+  )
+}
+
+export default IncidentLayer
