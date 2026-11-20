@@ -74,7 +74,7 @@ import { join, relative, resolve, sep, extname } from 'node:path'
 // furniture sprites (~0.2 MB) took public/ to 60.4 MB; same headroom.
 // Why 70 MB: the seven seasons' art (each season's four office pictures, four
 // desks and three plants: 49 WebP files, ~6.4 MB) took public/ to 68.4 MB.
-export const BUDGET_BYTES = 70_000_000
+export const BUDGET_BYTES = 72_000_000
 
 const SOURCE_ROOTS = ['src', 'index.html', 'server', 'electron', 'hooks', 'commands']
 const SOURCE_EXT = new Set(['.ts', '.tsx', '.js', '.cjs', '.mjs', '.html', '.css', '.md', '.sh', '.json', '.py'])

@@ -426,7 +426,7 @@ export function planRoomMoves(
       } else if (gather && wish.room === MEETING_ROOM) {
         // No chair left: stand along the wall by the door
         const n = standers++
-        moving = beginTransfer({ ...agent, visitSpotId: undefined }, wish.room, { x: 71 + (n % 4) * 3.2, y: 58.5 + Math.floor(n / 4) * 3 + (n % 4) * 1.4 }, 'visit', env)
+        moving = beginTransfer({ ...agent, visitSpotId: undefined }, wish.room, STAND_SLOTS[n % STAND_SLOTS.length], 'visit', env)
       } else return agent // full: stay put, ask again next frame
     }
     nextMeta = { ...nextMeta, [agent.id]: { ...nextMeta[agent.id], wish: undefined, transfer: moving.transfer, arrivedAtDeskAt: null } }
@@ -436,3 +436,6 @@ export function planRoomMoves(
 
   return changed ? { agents: next, meta: nextMeta, changed } : { agents, meta, changed: false }
 }
+
+// Where agents without a chair stand in the meeting room: a row along the open front of the room
+const STAND_SLOTS = [{ x: 47, y: 82 }, { x: 52, y: 84.5 }, { x: 57, y: 82 }, { x: 62, y: 79.5 }, { x: 42, y: 79 }, { x: 67, y: 77 }, { x: 37.5, y: 81 }, { x: 56, y: 86.5 }]
