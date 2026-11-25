@@ -4,18 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Pixel Office</title>
-    <meta name="description" content="A living isometric pixel office with meeting, server and lunch rooms, seasons and an AI assistant." />
-    <script>
-      // No server on this host, so start the built-in simulation with every room open.
-      (function () {
-        var h = location.hostname, p = new URLSearchParams(location.search);
-        if (h !== 'localhost' && h !== '127.0.0.1' && !p.has('sim')) {
-          p.set('sim', '');
-          if (!p.has('rooms')) p.set('rooms', 'all');
-          history.replaceState(null, '', location.pathname + '?' + p.toString().replace('sim=', 'sim') + location.hash);
-        }
-      })();
-    </script>
+    <meta name="description" content="A living isometric pixel office with meeting, server and lunch rooms, a day-and-night cycle, a data-science squad and an AI assistant." />
+    <meta name="theme-color" content="#0d0d12" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pixel Office" />
+    <meta property="og:description" content="A living isometric pixel office you can poke at." />
+    <meta property="og:image" content="https://pixel-office-live-koudamkis-projects.vercel.app/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script src="/sim-default.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { background: #0d0d12; overflow: hidden; }
